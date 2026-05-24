@@ -1,12 +1,11 @@
 /**
- * Preview mode — opt-in only. Lets the UI render with seed data so you can
- * review the design without a live Convex/auth backend.
+ * Preview mode — currently the default so we can test the customer flow
+ * with seed data while real PDFs / Twilio / R2 are still being wired.
  *
- * Defaults to false. In production we MUST be in non-preview mode so the real
- * Convex Auth flow takes over. Set NEXT_PUBLIC_PREVIEW_MODE=true in local dev
- * (see .env.local) to enable.
+ * To flip to real production (real Convex Auth, real users, no demo creds):
+ * set NEXT_PUBLIC_PREVIEW_MODE=false on Vercel.
  */
-export const IS_PREVIEW = process.env.NEXT_PUBLIC_PREVIEW_MODE === 'true';
+export const IS_PREVIEW = process.env.NEXT_PUBLIC_PREVIEW_MODE !== 'false';
 
 export const PREVIEW_DEALS = [
   {
