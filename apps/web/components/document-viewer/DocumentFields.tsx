@@ -71,9 +71,12 @@ export function DocumentFields({
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-2 text-xs uppercase tracking-wider font-medium text-ink-soft">
-        <Hash className="h-3.5 w-3.5" />
-        Fill in
+      <div className="flex items-center justify-between gap-2">
+        <span className="text-xs uppercase tracking-wider font-medium text-ink-soft inline-flex items-center gap-2">
+          <Hash className="h-3.5 w-3.5" />
+          Fill in
+        </span>
+        <span className="text-2xs text-ink-soft">Edit any field — the values are just suggestions</span>
       </div>
       <div className="space-y-3">
         {fields.map((f) => (

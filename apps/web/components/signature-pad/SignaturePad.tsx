@@ -4,6 +4,12 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/design/Button';
 import { Pen, Type, RotateCcw, Sparkles, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import {
+  loadSavedSignature,
+  saveSignature,
+  clearSavedSignature,
+  type SavedSig,
+} from '@/lib/saved-signature';
 
 /**
  * Easy signature — SignWell-style.
@@ -30,26 +36,6 @@ export type SignaturePayload = {
 };
 
 type Mode = 'type' | 'draw';
-
-type SavedSig = {
-  pngDataUrl: string;
-  sha256: string;
-  method: 'typed' | 'drawn';
-  savedAt: number;
-};
-
-const STORAGE_KEY = 'ecocribs.savedSignature.v1';
-
-function loadSavedSignature(): SavedSig | null {
-  if (typeof window === 'undefined') return null;
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return null;
-    return JSON.parse(raw);
-  } catch {
-    return null;
-  }
-}
 
 export function SignaturePad({
   consentText,
@@ -138,7 +124,7 @@ export function SignaturePad({
   };
 
   const removeSaved = () => {
-    localStorage.removeItem(STORAGE_KEY);
+    clearSavedSignature();
     setSaved(null);
     setUseSaved(false);
   };
@@ -171,14 +157,12 @@ export function SignaturePad({
 
       // Save for future documents if requested (and this isn't already saved)
       if (saveForLater && !useSaved) {
-        try {
-          localStorage.setItem(STORAGE_KEY, JSON.stringify({
-            pngDataUrl: png,
-            sha256,
-            method: method === 'saved' ? 'typed' : method,
-            savedAt: Date.now(),
-          } satisfies SavedSig));
-        } catch { /* localStorage may be unavailable; ignore */ }
+        saveSignature({
+          pngDataUrl: png,
+          sha256,
+          method: method === 'saved' ? 'typed' : method,
+          savedAt: Date.now(),
+        });
       }
 
       const fingerprint = await deviceFingerprint();

@@ -8,6 +8,7 @@ import type { Id } from '@convex/_generated/dataModel';
 import { Logo } from '@/components/design/Logo';
 import { SignaturePad, type SignaturePayload } from '@/components/signature-pad/SignaturePad';
 import { DocumentFields, defaultFieldsForKind, type DocFieldValues } from '@/components/document-viewer/DocumentFields';
+import { AnnotationCanvas, type Annotation } from '@/components/document-viewer/AnnotationCanvas';
 import { Card, CardContent } from '@/components/design/Card';
 import { ChevronLeft } from 'lucide-react';
 import Link from 'next/link';
@@ -21,9 +22,13 @@ export default function SignDocument({ params }: { params: Promise<{ dealId: str
   const live = useQuery(api.deals.get, IS_PREVIEW ? 'skip' : { id: dealId as Id<'deals'> });
   const data = IS_PREVIEW ? previewDeal(dealId) : live;
   const [fieldValues, setFieldValues] = useState<DocFieldValues>({});
+  const [annotations, setAnnotations] = useState<Annotation[]>([]);
   const [error, setError] = useState<string | null>(null);
 
-  const doc = useMemo(() => data?.documents.find((d: any) => d._id === docId) ?? data?.documents[0], [data, docId]);
+  const doc = useMemo(
+    () => data?.documents.find((d: any) => d._id === docId) ?? data?.documents[0],
+    [data, docId],
+  );
   const fields = useMemo(
     () => (doc ? defaultFieldsForKind(doc.kind as any, data?.deal?.buyerName ?? '') : []),
     [doc, data],
@@ -42,7 +47,7 @@ export default function SignDocument({ params }: { params: Promise<{ dealId: str
     }
     try {
       // TODO(production): call action api.documents.signature.signByClient
-      // — bundle fieldValues alongside signature for PDF stamping.
+      // — bundle fieldValues + annotations alongside signature for PDF stamping.
       router.push(`/d/${dealId}`);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Could not record signature.');
@@ -71,22 +76,21 @@ export default function SignDocument({ params }: { params: Promise<{ dealId: str
             <h1 className="font-heading text-2xl sm:text-3xl mt-1">Fill in &amp; sign.</h1>
           </div>
 
-          {/* PDF preview */}
+          {/* Click-anywhere annotation canvas (the "page") */}
           <Card>
             <CardContent className="pt-6">
-              <div className="aspect-[8.5/11] rounded-md bg-canvas border border-border grid place-items-center text-ink-soft text-sm text-center px-4">
-                Full document opens here
-                <br />
-                <span className="text-2xs">(PDF preview)</span>
-              </div>
+              <AnnotationCanvas annotations={annotations} onChange={setAnnotations} />
             </CardContent>
           </Card>
 
-          {/* Fill-in fields */}
+          {/* Structured "fill in" fields — prefilled but editable */}
           {fields.length > 0 && (
             <Card>
               <CardContent className="pt-6">
                 <DocumentFields fields={fields} values={fieldValues} onChange={setFieldValues} />
+                <p className="mt-3 text-2xs text-ink-soft">
+                  Tip: tap any field to edit — the prefilled values are just suggestions.
+                </p>
               </CardContent>
             </Card>
           )}
