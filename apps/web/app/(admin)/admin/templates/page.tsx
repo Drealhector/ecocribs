@@ -1,13 +1,13 @@
 import { Card, CardContent } from '@/components/design/Card';
 import { Button } from '@/components/design/Button';
-import { FileText, Upload, ShieldCheck } from 'lucide-react';
+import { FileText, Upload, Check } from 'lucide-react';
 
 export default function Templates() {
   const templates = [
-    { kind: 'receipt', name: 'Receipt — Lagos v1', approved: true },
-    { kind: 'offer_letter', name: 'Offer Letter — Lagos v1', approved: true },
-    { kind: 'contract_of_sale', name: 'Contract of Sale — Lagos v1', approved: false },
-    { kind: 'deed_of_assignment', name: 'Deed of Assignment — Lagos v1', approved: false },
+    { kind: 'receipt', name: 'Receipt', ready: true },
+    { kind: 'offer_letter', name: 'Offer Letter', ready: true },
+    { kind: 'contract_of_sale', name: 'Contract of Sale', ready: false },
+    { kind: 'deed_of_assignment', name: 'Deed of Assignment', ready: false },
   ];
 
   return (
@@ -16,7 +16,7 @@ export default function Templates() {
         <div>
           <h1 className="font-heading text-3xl">Templates</h1>
           <p className="text-ink-soft mt-1">
-            PDF templates with merge fields. Each version must be legal-counsel approved before use.
+            The PDFs the portal sends to customers. Upload a new one to update.
           </p>
         </div>
         <Button><Upload className="h-4 w-4" /> Upload PDF</Button>
@@ -32,17 +32,16 @@ export default function Templates() {
                 </span>
                 <div>
                   <p className="font-medium">{t.name}</p>
-                  <p className="text-xs text-ink-soft mono">{t.kind}</p>
                 </div>
               </div>
               <div className="flex items-center gap-3">
-                {t.approved ? (
+                {t.ready ? (
                   <span className="inline-flex items-center gap-1 text-xs font-medium text-brand-green">
-                    <ShieldCheck className="h-4 w-4" /> Counsel approved
+                    <Check className="h-4 w-4" /> Ready
                   </span>
                 ) : (
                   <span className="inline-flex items-center gap-1 text-xs font-medium text-brand-gold">
-                    Awaiting counsel review
+                    Needs upload
                   </span>
                 )}
                 <Button variant="outline" size="sm">Edit fields</Button>

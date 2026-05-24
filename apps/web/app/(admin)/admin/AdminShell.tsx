@@ -12,7 +12,7 @@ const NAV_ITEMS = [
   { href: '/admin/deals', icon: FileText, label: 'Deals', match: (p: string) => p.startsWith('/admin/deals') },
   { href: '/admin/templates', icon: FilePlus, label: 'Templates', match: (p: string) => p.startsWith('/admin/templates') },
   { href: '/admin/users', icon: Users, label: 'Team', match: (p: string) => p.startsWith('/admin/users') },
-  { href: '/admin/audit', icon: ScrollText, label: 'Audit log', match: (p: string) => p.startsWith('/admin/audit') },
+  { href: '/admin/audit', icon: ScrollText, label: 'Activity', match: (p: string) => p.startsWith('/admin/audit') },
 ];
 
 export function AdminShell({ children }: { children: React.ReactNode }) {
@@ -48,9 +48,9 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
         ))}
       </nav>
       <div className="mt-auto p-4 text-2xs text-ink-soft border-t border-border-subtle">
-        <p className="mono uppercase tracking-wider mb-1">Compliance</p>
-        <p>SCUML reg required before launch.</p>
-        <p className="mt-1">Deed of Assignment defaults to wet ink hybrid.</p>
+        <p className="mono uppercase tracking-wider mb-1 text-brand-green">EcoCribs Realty</p>
+        <p>Documentation Portal</p>
+        <p className="mt-1">Lekki Phase I, Lagos</p>
       </div>
     </>
   );

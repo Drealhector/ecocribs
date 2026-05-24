@@ -87,19 +87,6 @@ export default function DealDetail({ params }: { params: Promise<{ id: string }>
             </CardContent>
           </Card>
 
-          {deal.requiresWetInkDeed && (
-            <div className="rounded-md border border-brand-gold/30 bg-brand-gold-soft p-4 flex items-start gap-3 text-sm">
-              <AlertTriangle className="h-5 w-5 text-brand-gold shrink-0 mt-0.5" />
-              <div>
-                <p className="font-medium text-ink">Wet ink Deed required</p>
-                <p className="text-ink-muted mt-1">
-                  When this deal reaches the Deed of Assignment stage, the portal will pause for the
-                  printed deed to be wet signed, stamped, and lodged for Governor&apos;s consent.
-                  Upload the wet signed scan to advance to <em>Awaiting Governor&apos;s Consent</em>.
-                </p>
-              </div>
-            </div>
-          )}
         </div>
 
         <div>

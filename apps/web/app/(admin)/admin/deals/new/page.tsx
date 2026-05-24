@@ -212,16 +212,12 @@ export default function NewDealPage() {
               <Detail label="Purchase price" value={formatNGN(previewKobo)} mono />
             </DetailGrid>
 
-            <div className="rounded-md border border-brand-gold/30 bg-brand-gold-soft p-3 text-sm text-ink-muted">
-              <p className="font-medium text-ink flex items-center gap-2">
-                <AlertTriangle className="h-4 w-4 text-brand-gold" />
-                What happens after you verify
-              </p>
+            <div className="rounded-md border border-border bg-canvas-warm p-3 text-sm text-ink-muted">
+              <p className="font-medium text-ink">What happens after you verify</p>
               <ul className="mt-2 space-y-1 list-disc pl-5 text-2xs">
-                <li>A new deal is created in <span className="font-medium">AWAITING_PAYMENT_CONFIRMATION</span> state</li>
-                <li>The customer gets a magic link via email + WhatsApp</li>
-                <li>The link expires in 72 hours; one time use only</li>
-                <li>You&apos;re the assigned agent — it shows up in your pipeline</li>
+                <li>The deal is created and shows up in your pipeline</li>
+                <li>The customer gets a link via email and WhatsApp</li>
+                <li>The link expires in 72 hours</li>
               </ul>
             </div>
 

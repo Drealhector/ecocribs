@@ -12,7 +12,7 @@ import { ChevronLeft } from 'lucide-react';
 import Link from 'next/link';
 import { IS_PREVIEW, previewDeal } from '@/lib/preview';
 
-const CONSENT = `I confirm that I have read, understood, and agree to the contents of this document. I understand that my electronic signature has the same legal effect as a handwritten signature under the Evidence Act 2011, and that this signature event — including my IP address, device, and the time of signing — will be recorded in an immutable audit trail.`;
+const CONSENT = `I confirm I have read and agree to sign this document. I understand my signature, the time, and my device are recorded.`;
 
 export default function SignDocument({ params }: { params: Promise<{ dealId: string; docId: string }> }) {
   const { dealId, docId } = use(params);

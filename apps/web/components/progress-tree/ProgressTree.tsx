@@ -19,7 +19,7 @@ const STAGE_META: { key: StageKey; label: string; sublabel: string }[] = [
   { key: 'offer', label: 'Offer Letter', sublabel: 'You review and sign' },
   { key: 'contract', label: 'Contract of Sale', sublabel: 'You and witness sign' },
   { key: 'survey', label: 'Survey Plan', sublabel: 'EcoCribs uploads endorsed plan' },
-  { key: 'deed', label: 'Deed of Assignment', sublabel: 'Wet ink + Governor’s consent' },
+  { key: 'deed', label: 'Deed of Assignment', sublabel: 'You and witness sign' },
 ];
 
 export type StageState = 'pending' | 'current' | 'complete';

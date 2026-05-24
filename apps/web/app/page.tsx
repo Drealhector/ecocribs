@@ -37,10 +37,6 @@ export default function Landing() {
                   <Link href="/sign-in">Staff sign in</Link>
                 </Button>
               </div>
-              <p className="text-xs text-ink-soft flex items-center gap-2 pt-1">
-                <ShieldCheck className="h-3.5 w-3.5 shrink-0" />
-                NDPA aligned · SCUML ready · Evidence Act s.84 audit trail
-              </p>
             </div>
 
             <Card className="shadow-card max-w-md w-full mx-auto lg:mx-0 lg:ml-auto">
@@ -62,18 +58,18 @@ export default function Landing() {
           <div className="container py-12 sm:py-16 lg:py-20 grid gap-8 sm:gap-10 md:grid-cols-3">
             <Pillar
               icon={<FileSignature className="h-6 w-6" />}
-              title="Sign with confidence"
-              body="Every signature captures IP, time, geo, device fingerprint, and a SHA-256 of the signed PDF — an Evidence Act s.84 audit trail, generated automatically."
+              title="Sign anywhere"
+              body="Receipt, offer, contract, deed — all signable on phone or laptop. No printing, no scanning."
             />
             <Pillar
               icon={<MessageCircle className="h-6 w-6" />}
               title="WhatsApp first"
-              body="Magic links and reminders arrive where your clients actually answer. 24-hour gentle nudge, 72-hour escalation, 7-day admin alert — no transaction stalls."
+              body="Magic links and reminders arrive where your clients actually answer. No more chasing signatures across email threads."
             />
             <Pillar
               icon={<ShieldCheck className="h-6 w-6" />}
-              title="Wet ink aware"
-              body="The portal knows that Deeds of Assignment require wet ink and Governor's consent in Lagos. It guides the hybrid flow instead of pretending the digital signature is final."
+              title="Always in sync"
+              body="Both sides see the same progress, the same documents, the same status. No more 'did you get my offer?'"
             />
           </div>
         </section>
