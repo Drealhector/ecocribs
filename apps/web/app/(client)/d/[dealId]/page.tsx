@@ -94,7 +94,7 @@ export default function ClientDealView({ params }: { params: Promise<{ dealId: s
               <CardContent className="pt-6">
                 <h3 className="font-heading text-xl mb-4">Your documents</h3>
                 <div className="space-y-3">
-                  {documents.map((d) => <DocumentViewer key={d._id} doc={d as any} />)}
+                  {documents.map((d: any) => <DocumentViewer key={d._id} doc={d as any} />)}
                   {documents.length === 0 && (
                     <p className="text-sm text-ink-soft text-center py-8">
                       Documents will appear here as each stage completes.

@@ -1,5 +1,7 @@
 import { customCtx, customMutation, customQuery, customAction } from 'convex-helpers/server/customFunctions';
-import { mutation, query, action } from '../_generated/server';
+import { v } from 'convex/values';
+import { mutation, query, action, internalQuery } from '../_generated/server';
+import { internal } from '../_generated/api';
 import { getAuthUserId } from '@convex-dev/auth/server';
 import type { Doc, Id } from '../_generated/dataModel';
 
@@ -19,24 +21,21 @@ export type Role = 'admin' | 'manager' | 'documentation_officer' | 'agent';
  * Auth source: Convex Auth. `getAuthUserId(ctx)` returns the `Id<'users'>`
  * directly because the Convex Auth `users` table IS our `users` table.
  */
-const resolveAuth = customCtx(async (ctx: { auth: any; db: any }) => {
-  const userId = await getAuthUserId(ctx as any);
-  if (!userId) throw new Error('UNAUTHENTICATED');
-
-  const user = await ctx.db.get(userId) as Doc<'users'> | null;
+async function loadUserContext(ctx: any, userId: Id<'users'>) {
+  const user = (await ctx.db.get(userId)) as Doc<'users'> | null;
   if (!user) throw new Error('USER_NOT_PROVISIONED');
 
   // Pick the user's primary org membership. For v1, users belong to one org
   // (EcoCribs Realty). Later: read orgId from a session/header for multi-org.
-  const membership = await ctx.db
+  const membership = (await ctx.db
     .query('memberships')
     .withIndex('by_user_org', (q: any) => q.eq('userId', userId))
     .filter((q: any) => q.eq(q.field('status'), 'active'))
-    .first() as Doc<'memberships'> | null;
+    .first()) as Doc<'memberships'> | null;
 
   if (!membership) throw new Error('NOT_A_MEMBER');
 
-  const org = await ctx.db.get(membership.orgId) as Doc<'orgs'> | null;
+  const org = (await ctx.db.get(membership.orgId)) as Doc<'orgs'> | null;
   if (!org) throw new Error('ORG_NOT_FOUND');
 
   return {
@@ -46,8 +45,37 @@ const resolveAuth = customCtx(async (ctx: { auth: any; db: any }) => {
     membership,
     role: membership.role as Role,
   };
+}
+
+const resolveAuthQM = customCtx(async (ctx: any) => {
+  const userId = await getAuthUserId(ctx);
+  if (!userId) throw new Error('UNAUTHENTICATED');
+  return await loadUserContext(ctx, userId);
 });
 
-export const authedQuery = customQuery(query, resolveAuth);
-export const authedMutation = customMutation(mutation, resolveAuth);
-export const authedAction = customAction(action, resolveAuth);
+const resolveAuthAction = customCtx(async (ctx: any) => {
+  const userId = await getAuthUserId(ctx);
+  if (!userId) throw new Error('UNAUTHENTICATED');
+  const data = await ctx.runQuery(internal.lib.withAuth._resolveUserContext, { userId });
+  if (!data) throw new Error('NOT_A_MEMBER');
+  return data as Awaited<ReturnType<typeof loadUserContext>>;
+});
+
+/**
+ * Internal query used by `authedAction` to resolve the caller's user + org
+ * + membership via runQuery (since actions don't expose `ctx.db` directly).
+ */
+export const _resolveUserContext = internalQuery({
+  args: { userId: v.id('users') },
+  handler: async (ctx, args) => {
+    try {
+      return await loadUserContext(ctx, args.userId);
+    } catch {
+      return null;
+    }
+  },
+});
+
+export const authedQuery = customQuery(query, resolveAuthQM);
+export const authedMutation = customMutation(mutation, resolveAuthQM);
+export const authedAction = customAction(action, resolveAuthAction);

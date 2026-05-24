@@ -77,7 +77,7 @@ export default function DealDetail({ params }: { params: Promise<{ id: string }>
                 <Button variant="outline" size="sm">Send for signature</Button>
               </div>
               <div className="space-y-3">
-                {documents.map((d) => (<DocumentViewer key={d._id} doc={d as any} />))}
+                {documents.map((d: any) => (<DocumentViewer key={d._id} doc={d as any} />))}
                 {documents.length === 0 && (
                   <p className="text-sm text-ink-soft text-center py-8">
                     No documents yet. They&apos;ll appear as each stage completes.

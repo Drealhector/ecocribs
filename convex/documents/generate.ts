@@ -1,5 +1,5 @@
 import { v } from 'convex/values';
-import { internalAction, internalMutation } from '../_generated/server';
+import { internalAction, internalMutation, internalQuery } from '../_generated/server';
 import { internal } from '../_generated/api';
 import type { Id } from '../_generated/dataModel';
 
@@ -65,7 +65,7 @@ export const generateReceipt = internalAction({
   },
 });
 
-export const _getDealForGeneration = internalMutation({
+export const _getDealForGeneration = internalQuery({
   args: { dealId: v.id('deals') },
   handler: async (ctx, args) => {
     return ctx.db.get(args.dealId);
