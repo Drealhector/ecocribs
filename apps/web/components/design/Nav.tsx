@@ -39,10 +39,10 @@ export function Nav() {
             Admin
           </Link>
           <Button asChild variant="ghost" size="sm">
-            <Link href="/sign-in">Staff sign-in</Link>
+            <Link href="/sign-in">Staff sign in</Link>
           </Button>
           <Button asChild variant="primary" size="sm">
-            <Link href="/customer-sign-in">Customer sign-in</Link>
+            <Link href="/customer-sign-in">Customer sign in</Link>
           </Button>
         </nav>
 
@@ -76,7 +76,7 @@ export function Nav() {
               href="/sign-in"
               className="flex items-center justify-between rounded-md px-4 py-4 text-base font-medium text-ink hover:bg-canvas-warm"
             >
-              Staff sign-in
+              Staff sign in
               <span aria-hidden className="text-ink-soft">›</span>
             </Link>
             <Link
@@ -88,7 +88,7 @@ export function Nav() {
             </Link>
             <div className="mt-4 px-1">
               <Button asChild size="lg" className="w-full">
-                <Link href="/customer-sign-in">Customer sign-in</Link>
+                <Link href="/customer-sign-in">Customer sign in</Link>
               </Button>
             </div>
           </div>

@@ -50,7 +50,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
       <div className="mt-auto p-4 text-2xs text-ink-soft border-t border-border-subtle">
         <p className="mono uppercase tracking-wider mb-1">Compliance</p>
         <p>SCUML reg required before launch.</p>
-        <p className="mt-1">Deed of Assignment defaults to wet-ink hybrid.</p>
+        <p className="mt-1">Deed of Assignment defaults to wet ink hybrid.</p>
       </div>
     </>
   );

@@ -17,8 +17,8 @@ export function Footer() {
             Portal
           </h4>
           <ul className="mt-3 space-y-2 text-sm text-ink-muted">
-            <li><Link href="/customer-sign-in" className="hover:text-brand-green">Customer sign-in</Link></li>
-            <li><Link href="/sign-in" className="hover:text-brand-green">Staff sign-in</Link></li>
+            <li><Link href="/customer-sign-in" className="hover:text-brand-green">Customer sign in</Link></li>
+            <li><Link href="/sign-in" className="hover:text-brand-green">Staff sign in</Link></li>
             <li><Link href="/accept-invite" className="hover:text-brand-green">Accept invite</Link></li>
             <li><Link href="/privacy" className="hover:text-brand-green">Privacy &amp; Data Rights</Link></li>
             <li><Link href="/terms" className="hover:text-brand-green">Terms</Link></li>
@@ -47,7 +47,7 @@ export function Footer() {
             <li>NDPC DPCO: <span className="mono">[Engaged]</span></li>
             <li className="text-2xs pt-2 text-ink-soft/70">
               All documents subject to legal review.<br />
-              Deed of Assignment requires wet-ink execution + Governor&apos;s consent.
+              Deed of Assignment requires wet ink execution and Governor&apos;s consent.
             </li>
           </ul>
         </div>

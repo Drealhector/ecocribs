@@ -220,7 +220,7 @@ export default function NewDealPage() {
               <ul className="mt-2 space-y-1 list-disc pl-5 text-2xs">
                 <li>A new deal is created in <span className="font-medium">AWAITING_PAYMENT_CONFIRMATION</span> state</li>
                 <li>The customer gets a magic link via email + WhatsApp</li>
-                <li>The link expires in 72 hours; one-time use only</li>
+                <li>The link expires in 72 hours; one time use only</li>
                 <li>You&apos;re the assigned agent — it shows up in your pipeline</li>
               </ul>
             </div>
@@ -248,7 +248,7 @@ export default function NewDealPage() {
             <div>
               <h2 className="font-heading text-xl">Confirm with your password</h2>
               <p className="text-sm text-ink-soft mt-1">
-                Re-type your password to send {form.customerName}&apos;s link. Logged in as{' '}
+                Retype your password to send {form.customerName}&apos;s link. Logged in as{' '}
                 <span className="font-medium text-ink">{me?.email ?? '…'}</span>.
               </p>
             </div>
@@ -307,7 +307,7 @@ export default function NewDealPage() {
 
             <div className="rounded-md border border-border bg-canvas-warm p-4 space-y-3">
               <p className="text-xs uppercase tracking-wider font-medium text-ink-soft">
-                Magic link (one-time copy — agent reference)
+                Magic link (one time copy — agent reference)
               </p>
               <div className="flex items-center gap-2 rounded-md bg-canvas border border-border-subtle px-3 py-2">
                 <span className="mono text-xs truncate flex-1 text-ink-muted">{magicLink}</span>

@@ -74,7 +74,7 @@ export default function WitnessGate({ params }: { params: Promise<{ token: strin
               </Button>
               <p className="text-2xs text-ink-soft text-center flex items-center justify-center gap-1.5 pt-2">
                 <ShieldCheck className="h-3 w-3" />
-                Single-use · Expires 7 days after invitation
+                Single use · Expires 7 days after invitation
               </p>
             </form>
           </CardContent>

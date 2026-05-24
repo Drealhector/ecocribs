@@ -106,7 +106,7 @@ export default function AcceptInvite() {
         </Suspense>
         <p className="text-2xs text-ink-soft text-center flex items-center justify-center gap-1.5">
           <ShieldCheck className="h-3 w-3" />
-          Single-use · Expires 72 hours after invitation
+          Single use · Expires 72 hours after invitation
         </p>
       </div>
     </main>

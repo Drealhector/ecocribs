@@ -16,7 +16,7 @@ export default function AuditLog() {
           <ScrollText className="h-10 w-10 mx-auto mb-3 text-ink-soft/60" />
           <p className="text-sm">Audit events will appear here once activity begins.</p>
           <p className="text-2xs mt-2 mono">
-            Hash-chained · IP + UA captured · Evidence Act s.84 compliant
+            Hash chained · IP and UA captured · Evidence Act s.84 compliant
           </p>
         </CardContent>
       </Card>

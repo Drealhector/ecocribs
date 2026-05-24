@@ -31,15 +31,15 @@ export default function Landing() {
               </p>
               <div className="flex flex-col sm:flex-row gap-3 pt-1">
                 <Button asChild size="lg" className="w-full sm:w-auto">
-                  <Link href="/customer-sign-in">Customer sign-in</Link>
+                  <Link href="/customer-sign-in">Customer sign in</Link>
                 </Button>
                 <Button asChild variant="outline" size="lg" className="w-full sm:w-auto">
-                  <Link href="/sign-in">Staff sign-in</Link>
+                  <Link href="/sign-in">Staff sign in</Link>
                 </Button>
               </div>
               <p className="text-xs text-ink-soft flex items-center gap-2 pt-1">
                 <ShieldCheck className="h-3.5 w-3.5 shrink-0" />
-                NDPA-aligned · SCUML-ready · Evidence Act s.84 audit trail
+                NDPA aligned · SCUML ready · Evidence Act s.84 audit trail
               </p>
             </div>
 
@@ -67,13 +67,13 @@ export default function Landing() {
             />
             <Pillar
               icon={<MessageCircle className="h-6 w-6" />}
-              title="WhatsApp-first"
+              title="WhatsApp first"
               body="Magic links and reminders arrive where your clients actually answer. 24-hour gentle nudge, 72-hour escalation, 7-day admin alert — no transaction stalls."
             />
             <Pillar
               icon={<ShieldCheck className="h-6 w-6" />}
-              title="Wet-ink-aware"
-              body="The portal knows that Deeds of Assignment require wet ink + Governor's consent in Lagos. It guides the hybrid flow instead of pretending the digital signature is final."
+              title="Wet ink aware"
+              body="The portal knows that Deeds of Assignment require wet ink and Governor's consent in Lagos. It guides the hybrid flow instead of pretending the digital signature is final."
             />
           </div>
         </section>
@@ -90,7 +90,7 @@ export default function Landing() {
               </p>
               <div className="mt-8 flex flex-col sm:flex-row gap-3 sm:justify-center">
                 <Button asChild size="lg" variant="primary" className="w-full sm:w-auto">
-                  <Link href="/customer-sign-in">Customer sign-in</Link>
+                  <Link href="/customer-sign-in">Customer sign in</Link>
                 </Button>
                 <Button
                   asChild
@@ -98,7 +98,7 @@ export default function Landing() {
                   variant="outline"
                   className="w-full sm:w-auto bg-white/10 border-white/30 text-white hover:bg-white/20 hover:text-white"
                 >
-                  <Link href="/sign-in">Staff sign-in</Link>
+                  <Link href="/sign-in">Staff sign in</Link>
                 </Button>
               </div>
             </div>

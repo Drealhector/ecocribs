@@ -64,13 +64,13 @@ export default function SignInPage() {
       <div className="w-full max-w-md space-y-6">
         <div className="text-center">
           <Logo className="justify-center inline-flex" />
-          <h1 className="font-heading text-2xl mt-6">Staff sign-in</h1>
+          <h1 className="font-heading text-2xl mt-6">Staff sign in</h1>
           <p className="text-sm text-ink-soft mt-2">
             EcoCribs admins, managers, agents and documentation officers only.
             <br />
             Clients should use{' '}
             <Link href="/customer-sign-in" className="text-brand-green underline">
-              the customer sign-in
+              the customer sign in
             </Link>
             .
           </p>

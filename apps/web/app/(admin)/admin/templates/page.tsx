@@ -38,7 +38,7 @@ export default function Templates() {
               <div className="flex items-center gap-3">
                 {t.approved ? (
                   <span className="inline-flex items-center gap-1 text-xs font-medium text-brand-green">
-                    <ShieldCheck className="h-4 w-4" /> Counsel-approved
+                    <ShieldCheck className="h-4 w-4" /> Counsel approved
                   </span>
                 ) : (
                   <span className="inline-flex items-center gap-1 text-xs font-medium text-brand-gold">
