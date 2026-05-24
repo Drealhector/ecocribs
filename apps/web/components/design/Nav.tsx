@@ -1,15 +1,9 @@
 'use client';
 
 import Link from 'next/link';
-import dynamic from 'next/dynamic';
 import { Logo } from './Logo';
 import { Button } from './Button';
 import { IS_PREVIEW } from '@/lib/preview';
-
-const ClerkBits = dynamic(() => import('./NavClerkBits').then((m) => m.NavClerkBits), {
-  ssr: false,
-  loading: () => null,
-});
 
 export function Nav() {
   return (
@@ -36,7 +30,21 @@ export function Nav() {
               </Button>
             </>
           ) : (
-            <ClerkBits />
+            <>
+              {/* TODO: when api.users.me exists, render signed-in identity (avatar + sign-out) via useAuthActions from @convex-dev/auth/react */}
+              <Link
+                href="/admin"
+                className="hidden md:inline-flex text-sm font-medium text-ink-muted hover:text-ink transition-colors px-3 py-2"
+              >
+                Admin
+              </Link>
+              <Button asChild variant="ghost" size="sm">
+                <Link href="/sign-in">Staff sign-in</Link>
+              </Button>
+              <Button asChild variant="primary" size="sm">
+                <Link href="/customer-sign-in">Customer sign-in</Link>
+              </Button>
+            </>
           )}
         </div>
       </div>

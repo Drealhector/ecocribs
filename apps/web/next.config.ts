@@ -3,8 +3,16 @@ import type { NextConfig } from 'next';
 const config: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
+  output: 'standalone',
   experimental: {
-    serverActions: { allowedOrigins: ['portal.ecocribsrealty.com', 'localhost:3000'] },
+    serverActions: {
+      allowedOrigins: [
+        'portal.ecocribsrealty.com',
+        'ecocribs.vercel.app',
+        'ecocribs-portal.vercel.app',
+        'localhost:3000',
+      ],
+    },
   },
   images: {
     remotePatterns: [

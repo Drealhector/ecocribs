@@ -1,18 +1,21 @@
 'use client';
 
 import type { ReactNode } from 'react';
-import { ConvexProvider, ConvexReactClient } from 'convex/react';
+import { ConvexAuthNextjsProvider } from '@convex-dev/auth/nextjs';
+import { ConvexReactClient } from 'convex/react';
 import { IS_PREVIEW } from '@/lib/preview';
 
 /**
- * In production:
- *   <ClerkProvider> wraps <ConvexProviderWithClerk> wraps app.
- * In preview mode (no Clerk publishable key): ConvexProvider with a stub
- * client is mounted so `useQuery` calls compile; pages pass `'skip'` so
- * no network requests fire.
+ * Auth provider tree.
  *
- * To go live, set NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY + CLERK_SECRET_KEY +
- * NEXT_PUBLIC_CONVEX_URL, and remove NEXT_PUBLIC_PREVIEW_MODE.
+ * In production: <ConvexAuthNextjsProvider> wires Convex Auth session state
+ * into the Convex client so `useQuery` / `useMutation` see the authed identity.
+ *
+ * In preview mode (no Convex backend): short-circuit and render children
+ * directly. Pages pass `'skip'` to useQuery so no network requests fire.
+ *
+ * Note: the file name / export is kept as `ConvexClerkProvider` to avoid
+ * churning every importer in the same migration. Internally it's Convex Auth.
  */
 const convex = new ConvexReactClient(
   process.env.NEXT_PUBLIC_CONVEX_URL || 'https://preview.convex.cloud',
@@ -20,28 +23,12 @@ const convex = new ConvexReactClient(
 
 export function ConvexClerkProvider({ children }: { children: ReactNode }) {
   if (IS_PREVIEW) {
-    return <ConvexProvider client={convex}>{children}</ConvexProvider>;
+    // Preview keeps demo-data flow alive; no auth needed.
+    return <>{children}</>;
   }
-
-  // Lazy-import the real Clerk wiring so we don't load it in preview.
-  const { ClerkProvider, useAuth } = require('@clerk/nextjs');
-  const { ConvexProviderWithClerk } = require('convex/react-clerk');
   return (
-    <ClerkProvider
-      publishableKey={process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}
-      appearance={{
-        variables: {
-          colorPrimary: '#F3860D',
-          colorBackground: '#FFFFFF',
-          colorText: '#111111',
-          borderRadius: '0.75rem',
-          fontFamily: 'var(--font-lato), Lato, system-ui, sans-serif',
-        },
-      }}
-    >
-      <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
-        {children}
-      </ConvexProviderWithClerk>
-    </ClerkProvider>
+    <ConvexAuthNextjsProvider client={convex}>
+      {children}
+    </ConvexAuthNextjsProvider>
   );
 }

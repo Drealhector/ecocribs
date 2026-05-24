@@ -1,14 +1,16 @@
 /**
- * Convex ↔ Clerk JWT auth bridge.
+ * Convex Auth JWT provider configuration.
  *
- * Configure Clerk: Backend → JWT Templates → New template named "convex"
- * with issuer = your Clerk Frontend API URL. Convex validates the JWT using
- * the `applicationID` claim, which Clerk auto-populates.
+ * Convex Auth manages its own JWT issuance and signing — we just point Convex
+ * at the deployment's own site URL as the issuer. Per the Convex Auth docs,
+ * the `applicationID` claim is always "convex".
+ *
+ * See: https://labs.convex.dev/auth
  */
 export default {
   providers: [
     {
-      domain: process.env.NEXT_PUBLIC_CLERK_DOMAIN ?? process.env.CLERK_JWT_ISSUER_DOMAIN,
+      domain: process.env.CONVEX_SITE_URL,
       applicationID: 'convex',
     },
   ],

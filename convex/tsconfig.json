@@ -1,6 +1,7 @@
 {
   "extends": "../tsconfig.base.json",
   "compilerOptions": {
+    "skipLibCheck": true,
     "target": "ESNext",
     "lib": ["ES2022"],
     "types": ["node"],

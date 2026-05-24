@@ -1,11 +1,12 @@
 /**
- * Preview mode — true when no real Clerk/Convex keys are present. Lets the
- * UI render with seed data so you can review the design before wiring up
- * production backends.
+ * Preview mode — opt-in only. Lets the UI render with seed data so you can
+ * review the design without a live Convex/auth backend.
+ *
+ * Defaults to false. In production we MUST be in non-preview mode so the real
+ * Convex Auth flow takes over. Set NEXT_PUBLIC_PREVIEW_MODE=true in local dev
+ * (see .env.local) to enable.
  */
-export const IS_PREVIEW =
-  process.env.NEXT_PUBLIC_PREVIEW_MODE === 'true' ||
-  !process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
+export const IS_PREVIEW = process.env.NEXT_PUBLIC_PREVIEW_MODE === 'true';
 
 export const PREVIEW_DEALS = [
   {

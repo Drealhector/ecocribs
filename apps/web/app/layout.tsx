@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from 'next';
+import { ConvexAuthNextjsServerProvider } from '@convex-dev/auth/nextjs/server';
 import { poppins, lato, plexMono } from '@/lib/fonts';
 import { ConvexClerkProvider } from '@/components/providers/ConvexClerkProvider';
 import './globals.css';
@@ -31,14 +32,16 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html
-      lang="en"
-      className={`${poppins.variable} ${lato.variable} ${plexMono.variable}`}
-      suppressHydrationWarning
-    >
-      <body className="min-h-dvh antialiased">
-        <ConvexClerkProvider>{children}</ConvexClerkProvider>
-      </body>
-    </html>
+    <ConvexAuthNextjsServerProvider>
+      <html
+        lang="en"
+        className={`${poppins.variable} ${lato.variable} ${plexMono.variable}`}
+        suppressHydrationWarning
+      >
+        <body className="min-h-dvh antialiased">
+          <ConvexClerkProvider>{children}</ConvexClerkProvider>
+        </body>
+      </html>
+    </ConvexAuthNextjsServerProvider>
   );
 }

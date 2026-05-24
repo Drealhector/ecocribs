@@ -1,14 +1,8 @@
 'use client';
 
-import dynamic from 'next/dynamic';
 import { Card, CardContent } from '@/components/design/Card';
 import { IS_PREVIEW } from '@/lib/preview';
-import { UserCircle2, Shield, FileEdit, UserCog } from 'lucide-react';
-
-const OrganizationProfile = dynamic(
-  () => import('@clerk/nextjs').then((m) => m.OrganizationProfile),
-  { ssr: false },
-);
+import { UserCircle2, Shield, FileEdit, UserCog, Mail } from 'lucide-react';
 
 const PREVIEW_MEMBERS = [
   { name: 'Tomi Akinola', email: 'tomi@ecocribsrealty.com', role: 'Documentation Officer', icon: FileEdit },
@@ -50,12 +44,23 @@ export default function Team() {
           </CardContent>
         </Card>
       ) : (
-        <div className="rounded-lg bg-canvas overflow-hidden">
-          <OrganizationProfile
-            routing="hash"
-            appearance={{ variables: { colorPrimary: '#F3860D' }, elements: { rootBox: 'w-full', cardBox: 'w-full shadow-none' } }}
-          />
-        </div>
+        /* TODO: replace with real team-management UI once Convex Auth invite flow is built (list members, invite by email, role assignment, remove). */
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-start gap-4">
+              <span className="grid h-12 w-12 place-items-center rounded-full bg-brand-gold-soft text-brand-gold shrink-0">
+                <Mail className="h-6 w-6" />
+              </span>
+              <div className="space-y-1">
+                <h2 className="font-heading text-lg">Team management coming with Convex Auth</h2>
+                <p className="text-sm text-ink-soft">
+                  Invite-only flow is on the way. You will be able to send email invites, assign roles, and remove
+                  members from here.
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       )}
     </div>
   );

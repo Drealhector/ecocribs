@@ -1,5 +1,6 @@
 import { defineSchema, defineTable } from 'convex/server';
 import { v } from 'convex/values';
+import { authTables } from '@convex-dev/auth/server';
 
 /**
  * EcoCribs Documentation Portal — data model.
@@ -19,19 +20,36 @@ import { v } from 'convex/values';
  *   - Drafts not executed: 6 years.
  */
 export default defineSchema({
+  // ───────────────────────── Convex Auth tables ─────────────────────────
+  // Spread Convex Auth's bookkeeping tables (authSessions, authAccounts,
+  // authVerificationCodes, authRefreshTokens, authVerifiers,
+  // authRateLimits). The `users` table from `authTables` is overridden
+  // below so we can add our profile fields without losing Convex Auth's
+  // required columns.
+  ...authTables,
+
   // ───────────────────────── Identity ─────────────────────────
+  // Override Convex Auth's users table to carry our profile fields.
+  // The first block of optional fields mirrors Convex Auth's built-in
+  // schema (email, name, image, emailVerificationTime, phone,
+  // phoneVerificationTime, isAnonymous) — required so the auth library's
+  // internal mutations keep working. The second block is our additions.
   users: defineTable({
-    clerkId: v.string(),
-    email: v.string(),
+    // Convex Auth built-ins
+    email: v.optional(v.string()),
+    name: v.optional(v.string()),
+    image: v.optional(v.string()),
+    emailVerificationTime: v.optional(v.number()),
     phone: v.optional(v.string()),
-    fullName: v.string(),
+    phoneVerificationTime: v.optional(v.number()),
+    isAnonymous: v.optional(v.boolean()),
+    // EcoCribs profile fields
+    fullName: v.optional(v.string()),
     avatarUrl: v.optional(v.string()),
-    mfaEnabled: v.boolean(),
-    createdAt: v.number(),
+    mfaEnabled: v.optional(v.boolean()),
+    createdAt: v.optional(v.number()),
     lastSeenAt: v.optional(v.number()),
-  })
-    .index('by_clerk', ['clerkId'])
-    .index('by_email', ['email']),
+  }).index('email', ['email']),
 
   orgs: defineTable({
     clerkOrgId: v.string(),
