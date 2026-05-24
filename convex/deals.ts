@@ -279,7 +279,6 @@ export const onboardCustomer = authedAction({
   handler: async (ctx, args): Promise<{
     dealId: Id<'deals'>;
     token: string;
-    pin: string;
     expiresAt: number;
     customerName: string;
   }> => {
@@ -291,7 +290,6 @@ export const onboardCustomer = authedAction({
     if (args.purchasePriceKobo <= 0) throw new Error('INVALID_PRICE');
 
     const token = generateToken();
-    const pin = generatePin();
     const expiresAt = Date.now() + CLIENT_INVITE_TTL_MS;
 
     const result = await ctx.runMutation(internal.deals._commitOnboarding, {
@@ -308,18 +306,17 @@ export const onboardCustomer = authedAction({
       propertyTitleType: args.propertyTitleType,
       purchasePriceKobo: args.purchasePriceKobo,
       tokenHash: await hashToken(token),
-      pinHash: await hashPin(pin, token),
       expiresAt,
     });
 
     // Fan out the magic-link notifications (WhatsApp + email + in-app).
+    // No PIN — one-tap from WhatsApp/email gets the customer in.
     await ctx.scheduler.runAfter(0, internal.notifications.dispatch.dispatch, {
       orgId: ctx.orgId,
       dealId: result.dealId,
       template: 'invite.client.magic_link',
       payload: {
         token,
-        pin,
         expiresAt,
         customerName: args.customerName,
       },
@@ -328,7 +325,6 @@ export const onboardCustomer = authedAction({
     return {
       dealId: result.dealId,
       token,
-      pin,
       expiresAt,
       customerName: args.customerName,
     };
@@ -357,7 +353,7 @@ export const _commitOnboarding = internalMutation({
     ),
     purchasePriceKobo: v.number(),
     tokenHash: v.string(),
-    pinHash: v.string(),
+    pinHash: v.optional(v.string()),
     expiresAt: v.number(),
   },
   handler: async (ctx, args) => {
@@ -404,7 +400,7 @@ export const _commitOnboarding = internalMutation({
       createdAt: now,
     });
 
-    // 4. Mint the invitation
+    // 4. Mint the invitation (token-only; no PIN required for one-tap entry)
     const inviteId = await ctx.db.insert('invitations', {
       orgId: args.orgId,
       dealId,

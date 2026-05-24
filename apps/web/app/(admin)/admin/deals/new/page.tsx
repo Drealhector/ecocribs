@@ -36,7 +36,6 @@ export default function NewDealPage() {
   const [result, setResult] = useState<{
     dealId: string;
     token: string;
-    pin: string;
     customerName: string;
     expiresAt: number;
   } | null>(null);
@@ -296,14 +295,14 @@ export default function NewDealPage() {
               <div>
                 <h2 className="font-heading text-xl">{result.customerName} onboarded</h2>
                 <p className="text-sm text-ink-soft mt-1">
-                  The system has queued the magic link for delivery via email and WhatsApp.
+                  Send them this one link — one tap and they&apos;re inside their portal.
                 </p>
               </div>
             </div>
 
             <div className="rounded-md border border-border bg-canvas-warm p-4 space-y-3">
               <p className="text-xs uppercase tracking-wider font-medium text-ink-soft">
-                Magic link (one time copy — agent reference)
+                Their personal link
               </p>
               <div className="flex items-center gap-2 rounded-md bg-canvas border border-border-subtle px-3 py-2">
                 <span className="mono text-xs truncate flex-1 text-ink-muted">{magicLink}</span>
@@ -315,19 +314,10 @@ export default function NewDealPage() {
                   <Copy className="h-3.5 w-3.5" /> Copy
                 </button>
               </div>
-              <div className="grid grid-cols-2 gap-3 text-sm">
-                <div>
-                  <p className="text-xs uppercase tracking-wider font-medium text-ink-soft mb-1">PIN (for WhatsApp)</p>
-                  <p className="mono text-2xl tabular tracking-[0.3em]">{result.pin}</p>
-                </div>
-                <div>
-                  <p className="text-xs uppercase tracking-wider font-medium text-ink-soft mb-1">Expires</p>
-                  <p className="text-sm">in 72 hours</p>
-                </div>
-              </div>
+              <p className="text-2xs text-ink-soft">Expires in 72 hours · single use</p>
               <div className="flex flex-col sm:flex-row gap-2 pt-1">
                 <a
-                  href={`https://wa.me/${result && form.customerPhone.replace(/\D/g, '')}?text=${encodeURIComponent(`Hello ${result.customerName}, your EcoCribs portal is ready. Open: ${magicLink}\n\nYour 6-digit code: ${result.pin}`)}`}
+                  href={`https://wa.me/${form.customerPhone.replace(/\D/g, '')}?text=${encodeURIComponent(`Hello ${result.customerName}, your EcoCribs portal is ready. Tap to open: ${magicLink}`)}`}
                   target="_blank"
                   rel="noopener"
                   className="inline-flex items-center justify-center gap-2 rounded-md bg-brand-green text-white text-sm font-medium px-4 py-2.5 hover:bg-brand-green-deep"
@@ -335,7 +325,7 @@ export default function NewDealPage() {
                   <MessageCircle className="h-4 w-4" /> Open in WhatsApp
                 </a>
                 <a
-                  href={`mailto:${form.customerEmail}?subject=${encodeURIComponent('Your EcoCribs portal is ready')}&body=${encodeURIComponent(`Hello ${result.customerName},\n\nYour property portal is ready. Open this link to begin:\n${magicLink}\n\nYour 6-digit code (separate from the link): ${result.pin}\n\nThis link expires in 72 hours.\n\n— EcoCribs Realty`)}`}
+                  href={`mailto:${form.customerEmail}?subject=${encodeURIComponent('Your EcoCribs portal is ready')}&body=${encodeURIComponent(`Hello ${result.customerName},\n\nYour property portal is ready. Tap this link to open it:\n${magicLink}\n\nThe link expires in 72 hours.\n\n— EcoCribs Realty`)}`}
                   className="inline-flex items-center justify-center gap-2 rounded-md border border-border bg-canvas text-ink text-sm font-medium px-4 py-2.5 hover:bg-canvas-warm"
                 >
                   <Mail className="h-4 w-4" /> Open in email

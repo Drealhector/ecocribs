@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense, useState } from 'react';
+import { Suspense, useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useMutation } from '@/lib/convex-hooks';
 import { api } from '@convex/_generated/api';
@@ -8,81 +8,100 @@ import { Logo } from '@/components/design/Logo';
 import { Card, CardContent } from '@/components/design/Card';
 import { Input, Label } from '@/components/design/Input';
 import { Button } from '@/components/design/Button';
-import { ShieldCheck, MessageCircle } from 'lucide-react';
+import { ShieldCheck, MessageCircle, AlertCircle } from 'lucide-react';
 import { IS_PREVIEW, PREVIEW_DEALS } from '@/lib/preview';
 
-function AcceptInviteForm() {
+function AcceptInviteInner() {
   const params = useSearchParams();
   const tokenFromUrl = params.get('t') ?? '';
   const accept = useMutation(api.invitations.acceptInvite);
+
   const [token, setToken] = useState(tokenFromUrl);
-  const [pin, setPin] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const autoTried = useRef(false);
 
-  const onSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const goToDeal = (dealId: string) => {
+    window.location.href = `/d/${dealId}`;
+  };
+
+  const tryAccept = async (t: string) => {
     setError(null);
     setSubmitting(true);
     try {
       if (IS_PREVIEW) {
-        // Demo: any PIN routes to Adaeze's deal. Production wires Convex.
-        const target = PREVIEW_DEALS[0]!._id;
-        window.location.href = `/d/${target}`;
+        goToDeal(PREVIEW_DEALS[0]!._id as unknown as string);
         return;
       }
-      const session = await accept({ token, pin });
-      window.location.href = `/d/${session.dealId}`;
+      const session = await accept({ token: t });
+      goToDeal(session.dealId);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Invalid or expired invitation.');
-    } finally {
+      setError(err instanceof Error ? err.message : 'This link is invalid or has expired.');
       setSubmitting(false);
     }
   };
 
+  // Auto-accept the moment we land with a token in the URL — one tap from
+  // WhatsApp and the customer is straight in their portal.
+  useEffect(() => {
+    if (tokenFromUrl && !autoTried.current) {
+      autoTried.current = true;
+      tryAccept(tokenFromUrl);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tokenFromUrl]);
+
+  const onSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!token.trim()) return;
+    tryAccept(token.trim());
+  };
+
+  // Auto-accepting state (token in URL, in-flight)
+  if (tokenFromUrl && submitting && !error) {
+    return (
+      <Card>
+        <CardContent className="pt-10 pb-10 text-center">
+          <div className="inline-block h-10 w-10 rounded-full border-4 border-brand-orange border-t-transparent animate-spin" />
+          <p className="mt-4 text-ink-soft text-sm">Opening your portal…</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card>
       <CardContent className="pt-6">
-        <form onSubmit={onSubmit} className="space-y-4">
-          {!tokenFromUrl && (
+        {error && (
+          <div className="mb-5 flex items-start gap-2 rounded-md border border-danger/30 bg-red-50 p-3 text-sm text-danger">
+            <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
             <div>
-              <Label htmlFor="token">Invitation link</Label>
-              <Input
-                id="token"
-                value={token}
-                onChange={(e) => setToken(e.target.value)}
-                placeholder={IS_PREVIEW ? "Paste anything — demo accepts all" : "Paste the full link from your email"}
-                required={!IS_PREVIEW}
-              />
+              <p className="font-medium">This link won&apos;t open</p>
+              <p className="text-xs mt-1 text-danger/80">
+                It may have expired or already been used. Reply to your EcoCribs agent on
+                WhatsApp for a fresh link.
+              </p>
             </div>
-          )}
+          </div>
+        )}
+
+        <form onSubmit={onSubmit} className="space-y-4">
           <div>
-            <Label htmlFor="pin">6-digit code from WhatsApp</Label>
+            <Label htmlFor="token">Paste your link here</Label>
             <Input
-              id="pin"
-              inputMode="numeric"
-              autoComplete="one-time-code"
-              maxLength={6}
+              id="token"
+              value={token}
+              onChange={(e) => setToken(e.target.value)}
+              placeholder={IS_PREVIEW ? 'Paste anything — demo accepts all' : 'https://ecocribs-web.vercel.app/accept-invite?t=…'}
               required
-              value={pin}
-              onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))}
-              placeholder="••••••"
-              className="text-center text-2xl tracking-[0.5em] font-mono"
             />
             <p className="text-xs text-ink-soft mt-2 flex items-center gap-1.5">
-              <MessageCircle className="h-3 w-3" /> Sent to your phone separately from the link
+              <MessageCircle className="h-3 w-3" /> Tip: just tap the link in your WhatsApp message
+              — it opens your portal automatically.
             </p>
-            {IS_PREVIEW && (
-              <p className="text-2xs text-brand-gold mt-2">Demo: type any 6 digits to continue</p>
-            )}
           </div>
-          {error && <p className="text-sm text-danger" role="alert">{error}</p>}
-          <Button
-            type="submit"
-            disabled={(!IS_PREVIEW && !token) || pin.length !== 6 || submitting}
-            className="w-full"
-          >
-            {submitting ? 'Verifying…' : 'Open my deal'}
+          <Button type="submit" disabled={!token || submitting} className="w-full">
+            {submitting ? 'Opening…' : 'Open my portal'}
           </Button>
         </form>
       </CardContent>
@@ -98,11 +117,11 @@ export default function AcceptInvite() {
           <Logo className="justify-center inline-flex" />
           <h1 className="font-heading text-2xl mt-6">Welcome to your home journey</h1>
           <p className="text-sm text-ink-soft mt-2">
-            Two-factor by design: link from email, code from WhatsApp.
+            One tap from the link your agent sent you and you&apos;re in.
           </p>
         </div>
         <Suspense fallback={<div className="text-sm text-ink-soft text-center">Loading…</div>}>
-          <AcceptInviteForm />
+          <AcceptInviteInner />
         </Suspense>
         <p className="text-2xs text-ink-soft text-center flex items-center justify-center gap-1.5">
           <ShieldCheck className="h-3 w-3" />

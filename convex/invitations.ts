@@ -175,12 +175,15 @@ export const _persistInvite = internalMutation({
 });
 
 /**
- * Unauthenticated accept-invite endpoint. Verifies token + PIN in constant
- * time, atomically marks usedAt, returns a participant session token bound
- * to the deal scope.
+ * Unauthenticated accept-invite endpoint. The token alone is enough — one
+ * tap from WhatsApp/email gets the customer into their portal. PIN was
+ * dropped as unnecessary friction; the token is 32 random bytes, single-use,
+ * 72h TTL. If a PIN happens to be set on the invite (legacy or future
+ * higher-security flows), we still verify it; otherwise we just trust the
+ * token.
  */
 export const acceptInvite = mutation({
-  args: { token: v.string(), pin: v.string() },
+  args: { token: v.string(), pin: v.optional(v.string()) },
   handler: async (ctx, args) => {
     const tokenHash = await hashToken(args.token);
     const invite = await ctx.db
@@ -193,9 +196,13 @@ export const acceptInvite = mutation({
     if (invite.revokedAt) throw new Error('INVALID_OR_EXPIRED');
     if (Date.now() > invite.expiresAt) throw new Error('INVALID_OR_EXPIRED');
 
-    const expectedPinHash = await hashPin(args.pin, args.token);
-    if (!constantTimeEqual(expectedPinHash, invite.pinHash ?? '')) {
-      throw new Error('INVALID_OR_EXPIRED'); // don't reveal whether token or PIN was wrong
+    // Optional second-factor check — only enforced if a PIN was set on this invite.
+    if (invite.pinHash) {
+      const submitted = args.pin ?? '';
+      const expectedPinHash = await hashPin(submitted, args.token);
+      if (!constantTimeEqual(expectedPinHash, invite.pinHash)) {
+        throw new Error('INVALID_OR_EXPIRED');
+      }
     }
 
     const now = Date.now();

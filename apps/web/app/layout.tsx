@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import { ConvexAuthNextjsServerProvider } from '@convex-dev/auth/nextjs/server';
-import { poppins, lato, plexMono } from '@/lib/fonts';
+import { poppins, lato, plexMono, dancingScript } from '@/lib/fonts';
 import { ConvexClerkProvider } from '@/components/providers/ConvexClerkProvider';
 import './globals.css';
 
@@ -35,7 +35,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <ConvexAuthNextjsServerProvider>
       <html
         lang="en"
-        className={`${poppins.variable} ${lato.variable} ${plexMono.variable}`}
+        className={`${poppins.variable} ${lato.variable} ${plexMono.variable} ${dancingScript.variable}`}
         suppressHydrationWarning
       >
         <body className="min-h-dvh antialiased">

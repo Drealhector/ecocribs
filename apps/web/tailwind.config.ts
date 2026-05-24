@@ -57,6 +57,7 @@ const config: Config = {
         sans: ['var(--font-lato)', 'Lato', 'system-ui', 'sans-serif'],
         heading: ['var(--font-poppins)', 'Poppins', 'system-ui', 'sans-serif'],
         mono: ['var(--font-plex-mono)', '"IBM Plex Mono"', 'ui-monospace', 'monospace'],
+        script: ['var(--font-script)', '"Dancing Script"', 'cursive'],
       },
       fontSize: {
         '2xs': ['0.6875rem', { lineHeight: '1rem' }],
