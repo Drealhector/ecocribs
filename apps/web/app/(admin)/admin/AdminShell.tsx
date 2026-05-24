@@ -85,37 +85,30 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
           <SidebarContent />
         </aside>
 
-        {/* Mobile drawer */}
-        <div
-          className={cn(
-            'md:hidden fixed inset-0 z-30 transition-opacity duration-200',
-            drawerOpen ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0',
-          )}
-        >
-          <div
-            className="absolute inset-0 bg-ink/30 backdrop-blur-sm"
-            onClick={() => setDrawerOpen(false)}
-          />
-          <aside
-            className={cn(
-              'absolute top-0 right-0 bottom-0 w-72 max-w-[80vw] bg-canvas-warm border-l border-border flex flex-col transition-transform duration-200',
-              drawerOpen ? 'translate-x-0' : 'translate-x-full',
-            )}
-          >
-            <div className="h-14 flex items-center justify-between px-4 border-b border-border">
-              <p className="font-heading text-base">Admin</p>
-              <button
-                type="button"
-                onClick={() => setDrawerOpen(false)}
-                aria-label="Close menu"
-                className="inline-flex h-9 w-9 items-center justify-center rounded-md text-ink-muted hover:bg-canvas hover:text-ink"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-            <SidebarContent onItemClick={() => setDrawerOpen(false)} />
-          </aside>
-        </div>
+        {/* Mobile drawer — only mounted when open */}
+        {drawerOpen && (
+          <div className="md:hidden fixed inset-0 z-30 animate-fade-in">
+            <div
+              className="absolute inset-0 bg-ink/30 backdrop-blur-sm"
+              onClick={() => setDrawerOpen(false)}
+              aria-hidden
+            />
+            <aside className="absolute top-0 right-0 bottom-0 w-72 max-w-[80vw] bg-canvas-warm border-l border-border flex flex-col">
+              <div className="h-14 flex items-center justify-between px-4 border-b border-border">
+                <p className="font-heading text-base">Admin</p>
+                <button
+                  type="button"
+                  onClick={() => setDrawerOpen(false)}
+                  aria-label="Close menu"
+                  className="inline-flex h-9 w-9 items-center justify-center rounded-md text-ink-muted hover:bg-canvas hover:text-ink"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+              <SidebarContent onItemClick={() => setDrawerOpen(false)} />
+            </aside>
+          </div>
+        )}
 
         <div className="flex-1 min-w-0">{children}</div>
       </div>

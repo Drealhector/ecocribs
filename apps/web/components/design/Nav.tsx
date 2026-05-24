@@ -6,7 +6,6 @@ import { usePathname } from 'next/navigation';
 import { Menu, X } from 'lucide-react';
 import { Logo } from './Logo';
 import { Button } from './Button';
-import { cn } from '@/lib/utils';
 
 export function Nav() {
   const [open, setOpen] = useState(false);
@@ -59,42 +58,39 @@ export function Nav() {
         </button>
       </div>
 
-      {/* Mobile drawer */}
-      <div
-        className={cn(
-          'md:hidden fixed inset-x-0 top-16 bottom-0 bg-canvas border-t border-border z-30 transition-transform duration-200 ease-out',
-          open ? 'translate-y-0' : '-translate-y-[120%] pointer-events-none',
-        )}
-      >
-        <div className="container py-6 flex flex-col gap-1">
-          <Link
-            href="/admin"
-            className="flex items-center justify-between rounded-md px-4 py-4 text-base font-medium text-ink hover:bg-canvas-warm"
-          >
-            Admin dashboard
-            <span aria-hidden className="text-ink-soft">›</span>
-          </Link>
-          <Link
-            href="/sign-in"
-            className="flex items-center justify-between rounded-md px-4 py-4 text-base font-medium text-ink hover:bg-canvas-warm"
-          >
-            Staff sign-in
-            <span aria-hidden className="text-ink-soft">›</span>
-          </Link>
-          <Link
-            href="/accept-invite"
-            className="flex items-center justify-between rounded-md px-4 py-4 text-base font-medium text-ink hover:bg-canvas-warm"
-          >
-            I have an invite
-            <span aria-hidden className="text-ink-soft">›</span>
-          </Link>
-          <div className="mt-4 px-1">
-            <Button asChild size="lg" className="w-full">
-              <Link href="/customer-sign-in">Customer sign-in</Link>
-            </Button>
+      {/* Mobile drawer — only mounted when open (no SSR/transform purge issues) */}
+      {open && (
+        <div className="md:hidden fixed inset-x-0 top-16 bottom-0 bg-canvas border-t border-border z-30 overflow-y-auto animate-fade-in">
+          <div className="container py-6 flex flex-col gap-1">
+            <Link
+              href="/admin"
+              className="flex items-center justify-between rounded-md px-4 py-4 text-base font-medium text-ink hover:bg-canvas-warm"
+            >
+              Admin dashboard
+              <span aria-hidden className="text-ink-soft">›</span>
+            </Link>
+            <Link
+              href="/sign-in"
+              className="flex items-center justify-between rounded-md px-4 py-4 text-base font-medium text-ink hover:bg-canvas-warm"
+            >
+              Staff sign-in
+              <span aria-hidden className="text-ink-soft">›</span>
+            </Link>
+            <Link
+              href="/accept-invite"
+              className="flex items-center justify-between rounded-md px-4 py-4 text-base font-medium text-ink hover:bg-canvas-warm"
+            >
+              I have an invite
+              <span aria-hidden className="text-ink-soft">›</span>
+            </Link>
+            <div className="mt-4 px-1">
+              <Button asChild size="lg" className="w-full">
+                <Link href="/customer-sign-in">Customer sign-in</Link>
+              </Button>
+            </div>
           </div>
         </div>
-      </div>
+      )}
     </header>
   );
 }
