@@ -8,8 +8,15 @@
 export const DEMO_USERNAME = 'hector';
 export const DEMO_PASSWORD = 'testing 123';
 
+/**
+ * Accepts the original staff demo cred (hector / testing 123) OR the
+ * customer demo cred (customer@gmail.com / 1234). Both shortcut into
+ * the preview UI for testing without going through real Convex Auth.
+ */
 export function checkDemoCredentials(username: string, password: string): boolean {
   const u = username.trim().toLowerCase();
   const p = password.trim();
-  return u === DEMO_USERNAME && (p === DEMO_PASSWORD || p === 'testing123');
+  if (u === DEMO_USERNAME && (p === DEMO_PASSWORD || p === 'testing123')) return true;
+  if (u === 'customer@gmail.com' && p === '1234') return true;
+  return false;
 }
