@@ -87,7 +87,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
 
         {/* Mobile drawer — only mounted when open */}
         {drawerOpen && (
-          <div className="md:hidden fixed inset-0 z-30 animate-fade-in">
+          <div className="md:hidden fixed inset-0 z-40 animate-fade-in" style={{ height: '100dvh' }}>
             <div
               className="absolute inset-0 bg-ink/30 backdrop-blur-sm"
               onClick={() => setDrawerOpen(false)}

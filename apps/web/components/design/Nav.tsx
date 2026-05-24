@@ -60,7 +60,10 @@ export function Nav() {
 
       {/* Mobile drawer — only mounted when open (no SSR/transform purge issues) */}
       {open && (
-        <div className="md:hidden fixed inset-x-0 top-16 bottom-0 bg-canvas border-t border-border z-30 overflow-y-auto animate-fade-in">
+        <div
+          className="md:hidden fixed inset-x-0 top-16 bg-canvas border-t border-border z-30 overflow-y-auto animate-fade-in"
+          style={{ height: 'calc(100dvh - 4rem)' }}
+        >
           <div className="container py-6 flex flex-col gap-1">
             <Link
               href="/admin"
