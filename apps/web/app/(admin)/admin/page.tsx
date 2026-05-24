@@ -7,7 +7,8 @@ import { Card, CardContent } from '@/components/design/Card';
 import { StatusPill } from '@/components/design/StatusPill';
 import { formatNGN } from '@/lib/format';
 import { IS_PREVIEW, PREVIEW_DEALS, PREVIEW_PROPERTIES } from '@/lib/preview';
-import { TrendingUp, Clock, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { TrendingUp, Clock, AlertCircle, CheckCircle2, Plus } from 'lucide-react';
+import { Button } from '@/components/design/Button';
 
 export default function AdminOverview() {
   const liveDeals = useQuery(api.deals.list, IS_PREVIEW ? 'skip' : { limit: 200 });
@@ -24,10 +25,17 @@ export default function AdminOverview() {
   const totalNgn = deals.reduce((s, d) => s + d.purchasePriceKobo, 0);
 
   return (
-    <div className="container py-8 space-y-8">
-      <div>
-        <h1 className="font-heading text-3xl">Overview</h1>
-        <p className="text-ink-soft mt-1">Active transactions across EcoCribs Realty.</p>
+    <div className="container py-6 sm:py-8 space-y-6 sm:space-y-8">
+      <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+        <div>
+          <h1 className="font-heading text-3xl">Overview</h1>
+          <p className="text-ink-soft mt-1">Active transactions across EcoCribs Realty.</p>
+        </div>
+        <Button asChild className="self-start sm:self-auto">
+          <Link href="/admin/deals/new">
+            <Plus className="h-4 w-4" /> Onboard customer
+          </Link>
+        </Button>
       </div>
 
       <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">

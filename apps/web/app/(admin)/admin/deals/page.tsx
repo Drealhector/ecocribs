@@ -30,7 +30,7 @@ export default function DealsList() {
           <h1 className="font-heading text-3xl">Deals</h1>
           <p className="text-ink-soft mt-1">Every transaction across every stage.</p>
         </div>
-        <Button><Plus className="h-4 w-4" /> New deal</Button>
+        <Button asChild><Link href="/admin/deals/new"><Plus className="h-4 w-4" /> Onboard customer</Link></Button>
       </div>
 
       <div className="relative">

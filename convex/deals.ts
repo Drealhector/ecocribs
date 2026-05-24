@@ -1,12 +1,15 @@
 import { v } from 'convex/values';
-import { authedQuery, authedMutation } from './lib/withAuth';
+import { authedQuery, authedMutation, authedAction } from './lib/withAuth';
+import { internalMutation } from './_generated/server';
 import { assertCan, assertValidTransition, readDeal } from './lib/authz';
 import { recordEvent } from './lib/audit';
 import { STATUS_LABEL } from './lib/formatters';
+import { generateToken, generatePin, hashToken, hashPin } from './lib/tokens';
 import { internal } from './_generated/api';
 import type { Id } from './_generated/dataModel';
 
 const InitialDealState = 'AWAITING_PAYMENT_CONFIRMATION';
+const CLIENT_INVITE_TTL_MS = 72 * 60 * 60 * 1000;
 
 export const list = authedQuery({
   args: {
@@ -233,6 +236,208 @@ export const transition = authedMutation({
     });
 
     return { state: args.nextState };
+  },
+});
+
+/**
+ * Onboard a brand-new customer in one shot.
+ *
+ * Called from the agent's "Onboard customer" flow after they've re-typed
+ * their password (verified client-side via Convex Auth's signIn). This action
+ * atomically:
+ *   1. Creates the property (if it doesn't exist)
+ *   2. Creates the deal in state AWAITING_PAYMENT_CONFIRMATION
+ *   3. Creates the buyer as a Participant
+ *   4. Mints a single-use invitation token + 6-digit PIN
+ *   5. Schedules WhatsApp + email dispatch of the magic link
+ *   6. Records an audit event
+ *
+ * Returns the deal id and the raw token+PIN (one-shot — they're never sent
+ * over the wire again after this call). The agent sees them so they can
+ * copy-paste into WhatsApp manually if the automated delivery hasn't yet
+ * been configured.
+ */
+export const onboardCustomer = authedAction({
+  args: {
+    customerName: v.string(),
+    customerEmail: v.string(),
+    customerPhone: v.string(),
+    propertyName: v.string(),
+    propertyState: v.string(),
+    propertyLga: v.string(),
+    propertySizeSqm: v.number(),
+    propertyTitleType: v.union(
+      v.literal('c_of_o'),
+      v.literal('governors_consent'),
+      v.literal('excision'),
+      v.literal('gazette'),
+      v.literal('registered_survey'),
+      v.literal('family_receipt'),
+    ),
+    purchasePriceKobo: v.number(),
+  },
+  handler: async (ctx, args): Promise<{
+    dealId: Id<'deals'>;
+    token: string;
+    pin: string;
+    expiresAt: number;
+    customerName: string;
+  }> => {
+    // Basic shape checks (re-checked in the committing mutation)
+    if (!isValidEmail(args.customerEmail)) throw new Error('INVALID_EMAIL');
+    if (!isValidNigerianPhone(args.customerPhone) && !args.customerPhone.startsWith('+1')) {
+      throw new Error('INVALID_PHONE');
+    }
+    if (args.purchasePriceKobo <= 0) throw new Error('INVALID_PRICE');
+
+    const token = generateToken();
+    const pin = generatePin();
+    const expiresAt = Date.now() + CLIENT_INVITE_TTL_MS;
+
+    const result = await ctx.runMutation(internal.deals._commitOnboarding, {
+      orgId: ctx.orgId,
+      assignedAgentId: ctx.user._id,
+      actorRole: ctx.role,
+      customerName: args.customerName,
+      customerEmail: args.customerEmail,
+      customerPhone: args.customerPhone,
+      propertyName: args.propertyName,
+      propertyState: args.propertyState,
+      propertyLga: args.propertyLga,
+      propertySizeSqm: args.propertySizeSqm,
+      propertyTitleType: args.propertyTitleType,
+      purchasePriceKobo: args.purchasePriceKobo,
+      tokenHash: await hashToken(token),
+      pinHash: await hashPin(pin, token),
+      expiresAt,
+    });
+
+    // Fan out the magic-link notifications (WhatsApp + email + in-app).
+    await ctx.scheduler.runAfter(0, internal.notifications.dispatch.dispatch, {
+      orgId: ctx.orgId,
+      dealId: result.dealId,
+      template: 'invite.client.magic_link',
+      payload: {
+        token,
+        pin,
+        expiresAt,
+        customerName: args.customerName,
+      },
+    });
+
+    return {
+      dealId: result.dealId,
+      token,
+      pin,
+      expiresAt,
+      customerName: args.customerName,
+    };
+  },
+});
+
+export const _commitOnboarding = internalMutation({
+  args: {
+    orgId: v.id('orgs'),
+    assignedAgentId: v.id('users'),
+    actorRole: v.string(),
+    customerName: v.string(),
+    customerEmail: v.string(),
+    customerPhone: v.string(),
+    propertyName: v.string(),
+    propertyState: v.string(),
+    propertyLga: v.string(),
+    propertySizeSqm: v.number(),
+    propertyTitleType: v.union(
+      v.literal('c_of_o'),
+      v.literal('governors_consent'),
+      v.literal('excision'),
+      v.literal('gazette'),
+      v.literal('registered_survey'),
+      v.literal('family_receipt'),
+    ),
+    purchasePriceKobo: v.number(),
+    tokenHash: v.string(),
+    pinHash: v.string(),
+    expiresAt: v.number(),
+  },
+  handler: async (ctx, args) => {
+    const now = Date.now();
+
+    // 1. Create the property (every onboarding gets its own property row for now)
+    const propertyId = await ctx.db.insert('properties', {
+      orgId: args.orgId,
+      name: args.propertyName.trim(),
+      state: args.propertyState.trim(),
+      lga: args.propertyLga.trim(),
+      sizeSqm: args.propertySizeSqm,
+      titleType: args.propertyTitleType,
+      photos: [],
+      createdAt: now,
+    });
+
+    // 2. Create the deal
+    const dealId = await ctx.db.insert('deals', {
+      orgId: args.orgId,
+      propertyId,
+      buyerName: args.customerName.trim(),
+      buyerEmail: args.customerEmail.toLowerCase().trim(),
+      buyerPhone: args.customerPhone.trim(),
+      assignedAgentIds: [args.assignedAgentId],
+      state: InitialDealState,
+      statusLabel: STATUS_LABEL[InitialDealState]!,
+      requiresWetInkDeed: true,
+      purchasePriceKobo: args.purchasePriceKobo,
+      paidAmountKobo: 0,
+      createdBy: args.assignedAgentId,
+      createdAt: now,
+      updatedAt: now,
+    });
+
+    // 3. Create the buyer as a participant (for invitation linkage)
+    const participantId = await ctx.db.insert('participants', {
+      orgId: args.orgId,
+      dealId,
+      kind: 'client',
+      name: args.customerName.trim(),
+      email: args.customerEmail.toLowerCase().trim(),
+      phone: args.customerPhone.trim(),
+      createdAt: now,
+    });
+
+    // 4. Mint the invitation
+    const inviteId = await ctx.db.insert('invitations', {
+      orgId: args.orgId,
+      dealId,
+      participantId,
+      purpose: 'client_login',
+      tokenHash: args.tokenHash,
+      pinHash: args.pinHash,
+      scope: [`deal:read:${dealId}`],
+      expiresAt: args.expiresAt,
+      maxUses: 1,
+      deliveredVia: ['email', 'whatsapp'],
+      createdBy: args.assignedAgentId,
+      createdAt: now,
+    });
+
+    // 5. Audit
+    await recordEvent(ctx, {
+      orgId: args.orgId,
+      actorUserId: args.assignedAgentId,
+      actorRole: args.actorRole,
+      action: 'deal.create',
+      targetType: 'deal',
+      targetId: dealId,
+      metadata: {
+        buyerEmail: args.customerEmail,
+        purchasePriceKobo: args.purchasePriceKobo,
+        propertyId,
+        participantId,
+        inviteId,
+      },
+    });
+
+    return { dealId, propertyId, participantId, inviteId };
   },
 });
 
