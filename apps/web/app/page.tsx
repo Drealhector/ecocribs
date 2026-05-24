@@ -12,40 +12,40 @@ export default function Landing() {
       <Nav />
 
       <main>
-        {/* Hero — orange CTA, green accents, no SaaS gradient */}
+        {/* Hero */}
         <section className="relative overflow-hidden border-b border-border bg-canvas-warm pattern-vine">
-          <div className="container relative grid gap-12 py-16 md:grid-cols-2 md:py-24 lg:py-28 items-center">
-            <div className="space-y-6">
-              <span className="inline-flex items-center gap-2 rounded-pill bg-brand-green-soft px-3 py-1 text-xs font-medium uppercase tracking-wider text-brand-green">
+          <div className="container relative grid gap-10 py-12 sm:py-16 lg:grid-cols-[1.05fr_1fr] lg:gap-16 lg:py-24 xl:py-28 items-center">
+            <div className="space-y-5 sm:space-y-6 max-w-xl">
+              <span className="inline-flex items-center gap-2 rounded-pill bg-brand-green-soft px-3 py-1 text-2xs sm:text-xs font-medium uppercase tracking-wider text-brand-green">
                 <Leaf className="h-3.5 w-3.5" />
                 EcoCribs Realty &times; Documentation Portal
               </span>
-              <h1 className="font-heading text-5xl lg:text-6xl text-ink leading-[1.05]">
+              <h1 className="font-heading text-4xl sm:text-5xl lg:text-6xl text-ink leading-[1.05]">
                 Beautiful.<br />
                 That&apos;s your home,<br />
                 <span className="text-brand-green">secured.</span>
               </h1>
-              <p className="text-lg text-ink-muted max-w-md leading-relaxed">
+              <p className="text-base sm:text-lg text-ink-muted leading-relaxed">
                 Track every document from receipt to deed. One portal, every signature, zero
                 confusion. Built for Lagos. Compliant by design.
               </p>
-              <div className="flex flex-wrap gap-3 pt-2">
-                <Button asChild size="lg">
+              <div className="flex flex-col sm:flex-row gap-3 pt-1">
+                <Button asChild size="lg" className="w-full sm:w-auto">
                   <Link href="/customer-sign-in">Customer sign-in</Link>
                 </Button>
-                <Button asChild variant="outline" size="lg">
+                <Button asChild variant="outline" size="lg" className="w-full sm:w-auto">
                   <Link href="/sign-in">Staff sign-in</Link>
                 </Button>
               </div>
-              <p className="text-xs text-ink-soft pt-3 flex items-center gap-2">
-                <ShieldCheck className="h-3.5 w-3.5" />
+              <p className="text-xs text-ink-soft flex items-center gap-2 pt-1">
+                <ShieldCheck className="h-3.5 w-3.5 shrink-0" />
                 NDPA-aligned · SCUML-ready · Evidence Act s.84 audit trail
               </p>
             </div>
 
-            <Card className="shadow-card p-2 md:p-3">
+            <Card className="shadow-card max-w-md w-full mx-auto lg:mx-0 lg:ml-auto">
               <CardContent className="pt-6">
-                <p className="text-xs uppercase tracking-wider font-medium text-ink-soft mb-2">
+                <p className="text-2xs sm:text-xs uppercase tracking-wider font-medium text-ink-soft mb-3">
                   Your progress · Plot 27, Glory Land Estate, Epe
                 </p>
                 <ProgressTree
@@ -57,9 +57,9 @@ export default function Landing() {
           </div>
         </section>
 
-        {/* Three pillars — mirrors the live site's BUILD/BUY/SELL but tailored to the portal value prop */}
+        {/* Pillars */}
         <section className="border-b border-border">
-          <div className="container py-16 md:py-20 grid gap-8 md:grid-cols-3">
+          <div className="container py-12 sm:py-16 lg:py-20 grid gap-8 sm:gap-10 md:grid-cols-3">
             <Pillar
               icon={<FileSignature className="h-6 w-6" />}
               title="Sign with confidence"
@@ -79,19 +79,28 @@ export default function Landing() {
         </section>
 
         <section className="bg-brand-green text-white">
-          <div className="container py-16 text-center max-w-2xl mx-auto">
-            <h2 className="font-heading text-3xl md:text-4xl">Redefining how Nigerians close on a home.</h2>
-            <p className="mt-4 text-white/85 leading-relaxed">
-              Replace WhatsApp threads, paper receipts, and Google Sheets with one elegant interface
-              that lives under the EcoCribs brand.
-            </p>
-            <div className="mt-8 flex flex-wrap gap-3 justify-center">
-              <Button asChild size="lg" variant="primary">
-                <Link href="/customer-sign-in">Customer sign-in</Link>
-              </Button>
-              <Button asChild size="lg" variant="outline" className="bg-white/10 border-white/30 text-white hover:bg-white/20">
-                <Link href="/sign-in">Staff sign-in</Link>
-              </Button>
+          <div className="container py-12 sm:py-16 text-center">
+            <div className="max-w-2xl mx-auto">
+              <h2 className="font-heading text-2xl sm:text-3xl md:text-4xl leading-tight">
+                Redefining how Nigerians close on a home.
+              </h2>
+              <p className="mt-4 text-white/85 leading-relaxed text-sm sm:text-base">
+                Replace WhatsApp threads, paper receipts, and Google Sheets with one elegant
+                interface that lives under the EcoCribs brand.
+              </p>
+              <div className="mt-8 flex flex-col sm:flex-row gap-3 sm:justify-center">
+                <Button asChild size="lg" variant="primary" className="w-full sm:w-auto">
+                  <Link href="/customer-sign-in">Customer sign-in</Link>
+                </Button>
+                <Button
+                  asChild
+                  size="lg"
+                  variant="outline"
+                  className="w-full sm:w-auto bg-white/10 border-white/30 text-white hover:bg-white/20 hover:text-white"
+                >
+                  <Link href="/sign-in">Staff sign-in</Link>
+                </Button>
+              </div>
             </div>
           </div>
         </section>

@@ -40,36 +40,64 @@ export default function DealsList() {
 
       <Card>
         <CardContent className="pt-6">
-          <table className="w-full">
-            <thead>
-              <tr className="text-xs uppercase tracking-wider text-ink-soft border-b border-border-subtle">
-                <th className="text-left font-medium pb-2">Deal</th>
-                <th className="text-left font-medium pb-2">Buyer</th>
-                <th className="text-left font-medium pb-2">Price</th>
-                <th className="text-left font-medium pb-2">Status</th>
-                <th className="text-left font-medium pb-2">Updated</th>
-              </tr>
-            </thead>
-            <tbody>
-              {deals.map((d) => (
-                <tr key={d._id} className="border-b border-border-subtle last:border-0 hover:bg-canvas-warm">
-                  <td className="py-3 pr-2 mono text-xs tabular text-ink-soft">#{shortId(String(d._id))}</td>
-                  <td className="py-3 pr-2">
-                    <Link href={`/admin/deals/${d._id}`} className="font-medium text-ink hover:text-brand-orange">
-                      {d.buyerName}
-                    </Link>
-                    <p className="text-xs text-ink-soft">{d.buyerEmail}</p>
-                  </td>
-                  <td className="py-3 pr-2 mono tabular text-sm">{formatNGN(d.purchasePriceKobo)}</td>
-                  <td className="py-3 pr-2"><StatusPill label={d.statusLabel} /></td>
-                  <td className="py-3 text-sm text-ink-soft tabular">{relativeTime(d.updatedAt)}</td>
+          {/* Mobile: cards */}
+          <div className="space-y-3 md:hidden">
+            {deals.map((d: any) => (
+              <Link
+                key={d._id}
+                href={`/admin/deals/${d._id}`}
+                className="block rounded-md border border-border-subtle p-3 active:bg-canvas-warm"
+              >
+                <div className="flex items-start justify-between gap-3 mb-2">
+                  <p className="font-medium text-ink truncate flex-1">{d.buyerName}</p>
+                  <span className="mono text-2xs tabular text-ink-soft shrink-0">#{shortId(String(d._id))}</span>
+                </div>
+                <p className="text-xs text-ink-soft truncate">{d.buyerEmail}</p>
+                <div className="mt-3 flex items-center justify-between gap-3">
+                  <StatusPill label={d.statusLabel} />
+                  <p className="mono tabular text-sm font-medium">{formatNGN(d.purchasePriceKobo)}</p>
+                </div>
+                <p className="mt-2 text-2xs text-ink-soft">{relativeTime(d.updatedAt)}</p>
+              </Link>
+            ))}
+            {deals.length === 0 && (
+              <p className="py-12 text-center text-ink-soft text-sm">No deals match.</p>
+            )}
+          </div>
+
+          {/* Desktop: table */}
+          <div className="hidden md:block -mx-2 overflow-x-auto">
+            <table className="w-full min-w-[720px]">
+              <thead>
+                <tr className="text-xs uppercase tracking-wider text-ink-soft border-b border-border-subtle">
+                  <th className="text-left font-medium pb-2 px-2">Deal</th>
+                  <th className="text-left font-medium pb-2 px-2">Buyer</th>
+                  <th className="text-left font-medium pb-2 px-2">Price</th>
+                  <th className="text-left font-medium pb-2 px-2">Status</th>
+                  <th className="text-left font-medium pb-2 px-2">Updated</th>
                 </tr>
-              ))}
-              {deals.length === 0 && (
-                <tr><td colSpan={5} className="py-12 text-center text-ink-soft text-sm">No deals match.</td></tr>
-              )}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {deals.map((d: any) => (
+                  <tr key={d._id} className="border-b border-border-subtle last:border-0 hover:bg-canvas-warm">
+                    <td className="py-3 px-2 mono text-xs tabular text-ink-soft">#{shortId(String(d._id))}</td>
+                    <td className="py-3 px-2">
+                      <Link href={`/admin/deals/${d._id}`} className="font-medium text-ink hover:text-brand-orange">
+                        {d.buyerName}
+                      </Link>
+                      <p className="text-xs text-ink-soft">{d.buyerEmail}</p>
+                    </td>
+                    <td className="py-3 px-2 mono tabular text-sm">{formatNGN(d.purchasePriceKobo)}</td>
+                    <td className="py-3 px-2"><StatusPill label={d.statusLabel} /></td>
+                    <td className="py-3 px-2 text-sm text-ink-soft tabular">{relativeTime(d.updatedAt)}</td>
+                  </tr>
+                ))}
+                {deals.length === 0 && (
+                  <tr><td colSpan={5} className="py-12 text-center text-ink-soft text-sm">No deals match.</td></tr>
+                )}
+              </tbody>
+            </table>
+          </div>
         </CardContent>
       </Card>
     </div>
