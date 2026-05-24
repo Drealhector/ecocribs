@@ -17,6 +17,7 @@ export function checkDemoCredentials(username: string, password: string): boolea
   const u = username.trim().toLowerCase();
   const p = password.trim();
   if (u === DEMO_USERNAME && (p === DEMO_PASSWORD || p === 'testing123')) return true;
+  if ((u === 'hector@ecocribsrealty.com' || u === 'hector@gmail.com') && (p === DEMO_PASSWORD || p === 'testing123')) return true;
   if (u === 'customer@gmail.com' && p === '1234') return true;
   return false;
 }

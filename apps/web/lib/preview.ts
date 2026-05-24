@@ -1,11 +1,11 @@
 /**
- * Preview mode — currently the default so we can test the customer flow
- * with seed data while real PDFs / Twilio / R2 are still being wired.
+ * Preview mode — HARDCODED ON while we're testing the demo flow.
+ * Real PDFs / Twilio / R2 / Convex prod are not yet wired, so we use
+ * seed data so the customer side is exercisable.
  *
- * To flip to real production (real Convex Auth, real users, no demo creds):
- * set NEXT_PUBLIC_PREVIEW_MODE=false on Vercel.
+ * To flip to real production: change this to `false` and redeploy.
  */
-export const IS_PREVIEW = process.env.NEXT_PUBLIC_PREVIEW_MODE !== 'false';
+export const IS_PREVIEW = true;
 
 export const PREVIEW_DEALS = [
   {

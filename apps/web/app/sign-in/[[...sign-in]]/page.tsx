@@ -7,6 +7,7 @@ import { useAuthActions } from '@/lib/auth-hooks';
 import { Logo } from '@/components/design/Logo';
 import { Card, CardContent } from '@/components/design/Card';
 import { Input, Label } from '@/components/design/Input';
+import { PasswordInput } from '@/components/design/PasswordInput';
 import { Button } from '@/components/design/Button';
 import { IS_PREVIEW } from '@/lib/preview';
 import { checkDemoCredentials } from '@/lib/demo-auth';
@@ -94,9 +95,8 @@ export default function SignInPage() {
                 </div>
                 <div>
                   <Label htmlFor="password">Password</Label>
-                  <Input
+                  <PasswordInput
                     id="password"
-                    type="password"
                     autoComplete="current-password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
@@ -140,9 +140,8 @@ export default function SignInPage() {
                 </div>
                 <div>
                   <Label htmlFor="prod-password">Password</Label>
-                  <Input
+                  <PasswordInput
                     id="prod-password"
-                    type="password"
                     autoComplete={mode === 'signIn' ? 'current-password' : 'new-password'}
                     value={prodPassword}
                     onChange={(e) => setProdPassword(e.target.value)}

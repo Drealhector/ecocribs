@@ -8,6 +8,7 @@ import { api } from '@convex/_generated/api';
 import { Logo } from '@/components/design/Logo';
 import { Card, CardContent } from '@/components/design/Card';
 import { Input, Label } from '@/components/design/Input';
+import { PasswordInput } from '@/components/design/PasswordInput';
 import { Button } from '@/components/design/Button';
 import { ShieldCheck, AlertCircle, Mail, Briefcase } from 'lucide-react';
 
@@ -160,9 +161,8 @@ function TeamJoinInner() {
           </div>
           <div>
             <Label htmlFor="password">Choose a password</Label>
-            <Input
+            <PasswordInput
               id="password"
-              type="password"
               autoComplete="new-password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}

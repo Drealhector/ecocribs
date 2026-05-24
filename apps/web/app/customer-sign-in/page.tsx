@@ -7,8 +7,9 @@ import { useAuthActions } from '@/lib/auth-hooks';
 import { Logo } from '@/components/design/Logo';
 import { Card, CardContent } from '@/components/design/Card';
 import { Input, Label } from '@/components/design/Input';
+import { PasswordInput } from '@/components/design/PasswordInput';
 import { Button } from '@/components/design/Button';
-import { ShieldCheck, MessageCircle } from 'lucide-react';
+import { MessageCircle, AlertCircle } from 'lucide-react';
 import { checkDemoCredentials } from '@/lib/demo-auth';
 import { IS_PREVIEW, PREVIEW_DEALS } from '@/lib/preview';
 
@@ -16,38 +17,33 @@ export default function CustomerSignIn() {
   const router = useRouter();
   const { signIn } = useAuthActions();
 
-  // Preview-mode demo state
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-
-  // Production state
   const [email, setEmail] = useState('');
-  const [prodPassword, setProdPassword] = useState('');
-
+  const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
-  const onPreviewSubmit = (e: React.FormEvent) => {
+  const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setSubmitting(true);
-    if (checkDemoCredentials(username, password)) {
-      router.push(`/d/${PREVIEW_DEALS[0]!._id}`);
-    } else {
-      setError('Invalid credentials. Try hector / testing 123');
-      setSubmitting(false);
-    }
-  };
 
-  const onProdSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(null);
-    setSubmitting(true);
+    // In preview/demo mode, check the demo creds first — instant entry
+    // into the customer portal with seed data. Falls through to real
+    // Convex Auth signIn for any other credentials.
+    if (IS_PREVIEW && checkDemoCredentials(email, password)) {
+      router.push(`/d/${PREVIEW_DEALS[0]!._id}`);
+      return;
+    }
+
     try {
-      await signIn('password', { email, password: prodPassword, flow: 'signIn' });
-      router.push('/my-deals');
+      await signIn('password', { email, password, flow: 'signIn' });
+      router.push(`/d/${PREVIEW_DEALS[0]!._id}`);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Invalid email or password.');
+      setError(
+        err instanceof Error
+          ? `Sign-in failed: ${err.message.replace(/^.*?Error:\s*/, '')}`
+          : 'Invalid email or password.',
+      );
       setSubmitting(false);
     }
   };
@@ -65,95 +61,55 @@ export default function CustomerSignIn() {
 
         <Card>
           <CardContent className="pt-6">
-            {IS_PREVIEW ? (
-              <form onSubmit={onPreviewSubmit} className="space-y-4">
-                <div>
-                  <Label htmlFor="username">Username</Label>
-                  <Input
-                    id="username"
-                    type="text"
-                    autoComplete="username"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    placeholder="hector"
-                    required
-                  />
+            <form onSubmit={onSubmit} className="space-y-4">
+              <div>
+                <Label htmlFor="email">Your email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  autoComplete="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="customer@gmail.com"
+                  required
+                />
+                <p className="text-2xs text-ink-soft mt-1.5">
+                  Use your personal email — Gmail, Yahoo, Outlook, whatever you check.
+                </p>
+              </div>
+              <div>
+                <Label htmlFor="password">Password</Label>
+                <PasswordInput
+                  id="password"
+                  autoComplete="current-password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                />
+              </div>
+              {error && (
+                <p className="text-sm text-danger flex items-start gap-2" role="alert">
+                  <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" /> {error}
+                </p>
+              )}
+              <Button type="submit" disabled={submitting} className="w-full">
+                {submitting ? 'Signing in…' : 'Open my portal'}
+              </Button>
+
+              {IS_PREVIEW && (
+                <div className="pt-3 border-t border-border-subtle text-2xs text-ink-soft text-center mono">
+                  Demo · customer@gmail.com · 1234
                 </div>
-                <div>
-                  <Label htmlFor="password">Password</Label>
-                  <Input
-                    id="password"
-                    type="password"
-                    autoComplete="current-password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="testing 123"
-                    required
-                  />
-                </div>
-                {error && <p className="text-sm text-danger" role="alert">{error}</p>}
-                <Button type="submit" disabled={submitting} className="w-full">
-                  {submitting ? 'Signing in…' : 'Open my portal'}
-                </Button>
-                <div className="pt-3 border-t border-border-subtle space-y-2">
-                  <p className="text-2xs text-ink-soft text-center flex items-center justify-center gap-1.5">
-                    <ShieldCheck className="h-3 w-3" /> Demo credentials
-                  </p>
-                  <p className="text-2xs mono text-center text-ink-muted">
-                    hector · testing 123
-                  </p>
-                  <p className="text-2xs text-ink-soft text-center pt-2 flex items-center justify-center gap-1.5">
-                    <MessageCircle className="h-3 w-3" />
-                    First time? Use the{' '}
-                    <Link href="/accept-invite" className="text-brand-green underline">
-                      magic link from WhatsApp
-                    </Link>
-                  </p>
-                </div>
-              </form>
-            ) : (
-              <form onSubmit={onProdSubmit} className="space-y-4">
-                <div>
-                  <Label htmlFor="email">Your email</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    autoComplete="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="your.name@gmail.com"
-                    required
-                  />
-                  <p className="text-2xs text-ink-soft mt-1.5">
-                    Use your personal email — Gmail, Yahoo, Outlook, whatever you check.
-                  </p>
-                </div>
-                <div>
-                  <Label htmlFor="prod-password">Password</Label>
-                  <Input
-                    id="prod-password"
-                    type="password"
-                    autoComplete="current-password"
-                    value={prodPassword}
-                    onChange={(e) => setProdPassword(e.target.value)}
-                    required
-                  />
-                </div>
-                {error && <p className="text-sm text-danger" role="alert">{error}</p>}
-                <Button type="submit" disabled={submitting} className="w-full">
-                  {submitting ? 'Signing in…' : 'Open my portal'}
-                </Button>
-                <div className="pt-3 border-t border-border-subtle">
-                  <p className="text-2xs text-ink-soft text-center flex items-center justify-center gap-1.5">
-                    <MessageCircle className="h-3 w-3" />
-                    First time? Use the{' '}
-                    <Link href="/accept-invite" className="text-brand-green underline">
-                      magic link from WhatsApp
-                    </Link>
-                  </p>
-                </div>
-              </form>
-            )}
+              )}
+
+              <p className="text-2xs text-ink-soft text-center pt-2 flex items-center justify-center gap-1.5">
+                <MessageCircle className="h-3 w-3" />
+                First time? Use the{' '}
+                <Link href="/accept-invite" className="text-brand-green underline">
+                  magic link from WhatsApp
+                </Link>
+              </p>
+            </form>
           </CardContent>
         </Card>
 
