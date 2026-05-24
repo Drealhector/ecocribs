@@ -11,6 +11,7 @@ type Doc = {
   kind: 'receipt' | 'offer_letter' | 'contract_of_sale' | 'survey_plan' | 'deed_of_assignment';
   status: string;
   updatedAt: number;
+  fileUrl?: string;
 };
 
 const KIND_LABEL: Record<Doc['kind'], string> = {
@@ -30,11 +31,13 @@ const STATUS_LABEL: Record<string, string> = {
   archived: 'Archived',
 };
 
-export function DocumentViewer({ doc, onSign, onDownload }: {
+export function DocumentViewer({ doc, onSign }: {
   doc: Doc;
   onSign?: () => void;
-  onDownload?: () => void;
 }) {
+  const downloadable = doc.status === 'fully_signed' || doc.status === 'executed';
+  const downloadHref = `/api/documents/${doc._id}/download`;
+
   return (
     <Card className="overflow-hidden">
       <div className="bg-canvas-warm border-b border-border-subtle p-4 flex items-center gap-4">
@@ -53,9 +56,11 @@ export function DocumentViewer({ doc, onSign, onDownload }: {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          {onDownload && (
-            <Button variant="ghost" size="icon" onClick={onDownload} aria-label="Download">
-              <Download className="h-4 w-4" />
+          {downloadable && (
+            <Button asChild variant="ghost" size="icon" aria-label="Download signed PDF">
+              <a href={downloadHref} download>
+                <Download className="h-4 w-4" />
+              </a>
             </Button>
           )}
           <Button variant="outline" size="sm">
@@ -66,14 +71,22 @@ export function DocumentViewer({ doc, onSign, onDownload }: {
       </div>
 
       <CardContent className="pt-6">
-        {/* PDF embed will live here. For MVP we use an <iframe> against a
-            signed R2 URL minted server-side. Page-turn affordances + zoom
-            handled in phase 2 with PDF.js. */}
-        <div className="aspect-[8.5/11] w-full rounded-md bg-canvas-warm border border-border grid place-items-center text-ink-soft">
-          <span className="text-sm">PDF preview will render here</span>
-        </div>
+        {/* PDF preview — when fileUrl is present, render the PDF via iframe
+            against a short-lived signed URL. Until templates + R2 land,
+            we show a friendly placeholder. */}
+        {doc.fileUrl ? (
+          <iframe
+            src={doc.fileUrl}
+            title={KIND_LABEL[doc.kind]}
+            className="aspect-[8.5/11] w-full rounded-md bg-canvas border border-border"
+          />
+        ) : (
+          <div className="aspect-[8.5/11] w-full rounded-md bg-canvas-warm border border-border grid place-items-center text-ink-soft text-sm text-center px-4">
+            Document preview will appear here
+          </div>
+        )}
 
-        {onSign && doc.status !== 'fully_signed' && (
+        {onSign && doc.status !== 'fully_signed' && doc.status !== 'executed' && (
           <div className="mt-4">
             <Button onClick={onSign} size="lg" className="w-full md:w-auto">
               Sign this document

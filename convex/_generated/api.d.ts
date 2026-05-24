@@ -23,6 +23,7 @@ import type * as lib_withAuth from "../lib/withAuth.js";
 import type * as notifications_dispatch from "../notifications/dispatch.js";
 import type * as notifications_reminders from "../notifications/reminders.js";
 import type * as seed from "../seed.js";
+import type * as teamInvites from "../teamInvites.js";
 import type * as users from "../users.js";
 
 import type {
@@ -47,6 +48,7 @@ declare const fullApi: ApiFromModules<{
   "notifications/dispatch": typeof notifications_dispatch;
   "notifications/reminders": typeof notifications_reminders;
   seed: typeof seed;
+  teamInvites: typeof teamInvites;
   users: typeof users;
 }>;
 

@@ -11,6 +11,30 @@ import type { Id } from './_generated/dataModel';
 const InitialDealState = 'AWAITING_PAYMENT_CONFIRMATION';
 const CLIENT_INVITE_TTL_MS = 72 * 60 * 60 * 1000;
 
+/**
+ * Map (current state, document kind that was just fully signed) → next state.
+ * Used by the signature recording flow to automatically advance the deal
+ * to the next stage once the required parties have signed.
+ */
+const NEXT_STATE_AFTER_SIGN: Record<string, string> = {
+  // Offer Letter signed by client → move to Contract stage
+  'OFFER_LETTER_AWAITING_CLIENT|offer_letter': 'CONTRACT_AWAITING_CLIENT',
+  // Contract signed by client → wait for witness
+  'CONTRACT_AWAITING_CLIENT|contract_of_sale': 'CONTRACT_AWAITING_WITNESS',
+  // Contract signed by witness → fully signed, await survey upload
+  'CONTRACT_AWAITING_WITNESS|contract_of_sale': 'CONTRACT_SIGNED',
+  // Survey uploaded → ready for deed
+  'SURVEY_ISSUED|survey_plan': 'DEED_AWAITING_CLIENT',
+  // Deed signed by client → wait for witness (or wet ink if hybrid)
+  'DEED_AWAITING_CLIENT|deed_of_assignment': 'DEED_AWAITING_WITNESS',
+  // Deed signed by witness → fully signed; admin closes manually
+  'DEED_AWAITING_WITNESS|deed_of_assignment': 'DEED_SIGNED',
+};
+
+export function nextStateAfterSign(currentState: string, docKind: string): string | null {
+  return NEXT_STATE_AFTER_SIGN[`${currentState}|${docKind}`] ?? null;
+}
+
 export const list = authedQuery({
   args: {
     state: v.optional(v.string()),
