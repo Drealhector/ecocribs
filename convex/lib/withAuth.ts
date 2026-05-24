@@ -27,11 +27,37 @@ async function loadUserContext(ctx: any, userId: Id<'users'>) {
 
   // Pick the user's primary org membership. For v1, users belong to one org
   // (EcoCribs Realty). Later: read orgId from a session/header for multi-org.
-  const membership = (await ctx.db
+  let membership = (await ctx.db
     .query('memberships')
     .withIndex('by_user_org', (q: any) => q.eq('userId', userId))
     .filter((q: any) => q.eq(q.field('status'), 'active'))
     .first()) as Doc<'memberships'> | null;
+
+  // First-user bootstrap: if there's no membership AND no org exists yet, the
+  // signing-in user becomes the admin/owner of a new EcoCribs Realty org.
+  // Only fires from mutations (queries are read-only) — actions go through
+  // the runQuery path which uses the internal `_resolveUserContext` query
+  // that returns null instead of bootstrapping.
+  if (!membership && typeof ctx.db.insert === 'function') {
+    const anyOrg = await ctx.db.query('orgs').first();
+    if (!anyOrg) {
+      const orgId = await ctx.db.insert('orgs', {
+        clerkOrgId: '',
+        name: 'EcoCribs Realty',
+        governingLawDefault: 'lagos' as const,
+        createdAt: Date.now(),
+      });
+      const memId = await ctx.db.insert('memberships', {
+        userId,
+        orgId,
+        role: 'admin' as Role,
+        status: 'active' as const,
+        teamIds: [],
+        createdAt: Date.now(),
+      });
+      membership = (await ctx.db.get(memId)) as Doc<'memberships'>;
+    }
+  }
 
   if (!membership) throw new Error('NOT_A_MEMBER');
 
