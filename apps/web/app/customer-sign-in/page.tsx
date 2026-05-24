@@ -114,16 +114,19 @@ export default function CustomerSignIn() {
             ) : (
               <form onSubmit={onProdSubmit} className="space-y-4">
                 <div>
-                  <Label htmlFor="email">Email</Label>
+                  <Label htmlFor="email">Your email</Label>
                   <Input
                     id="email"
                     type="email"
                     autoComplete="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="you@example.com"
+                    placeholder="your.name@gmail.com"
                     required
                   />
+                  <p className="text-2xs text-ink-soft mt-1.5">
+                    Use your personal email — Gmail, Yahoo, Outlook, whatever you check.
+                  </p>
                 </div>
                 <div>
                   <Label htmlFor="prod-password">Password</Label>

@@ -124,16 +124,19 @@ export default function SignInPage() {
             <CardContent className="pt-6">
               <form onSubmit={onProdSubmit} className="space-y-4">
                 <div>
-                  <Label htmlFor="email">Email</Label>
+                  <Label htmlFor="email">Work email</Label>
                   <Input
                     id="email"
                     type="email"
                     autoComplete="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="you@ecocribs.com"
+                    placeholder="you@ecocribsrealty.com"
                     required
                   />
+                  <p className="text-2xs text-ink-soft mt-1.5">
+                    Staff only — use your EcoCribs Realty work email.
+                  </p>
                 </div>
                 <div>
                   <Label htmlFor="prod-password">Password</Label>
