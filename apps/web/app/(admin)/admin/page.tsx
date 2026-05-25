@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { useQuery } from '@/lib/convex-hooks';
 import { api } from '@convex/_generated/api';
@@ -7,13 +8,50 @@ import { Card, CardContent } from '@/components/design/Card';
 import { StatusPill } from '@/components/design/StatusPill';
 import { formatNGN } from '@/lib/format';
 import { IS_PREVIEW, PREVIEW_DEALS, PREVIEW_PROPERTIES, PREVIEW_COMMISSIONS } from '@/lib/preview';
-import { TrendingUp, Users, UserCircle2, Wallet, ArrowRight } from 'lucide-react';
+import { TrendingUp, Users, UserCircle2, Wallet, ArrowRight, ChevronDown, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 
-// Preview seed — staff-by-staff breakdown of the org
+// Preview seed — staff-by-staff breakdown of the org (base = "This month")
 const PREVIEW_STAFF_PERFORMANCE = [
-  { name: 'Folake Bello', role: 'Manager', agentsCount: 3, dealsCount: 4, totalKobo: 26_950_000_00 },
-  { name: 'Tomi Akinola', role: 'Documentation Officer', agentsCount: 2, dealsCount: 1, totalKobo: 8_100_000_00 },
+  {
+    name: 'Folake Bello',
+    role: 'Manager',
+    agentsCount: 3,
+    customersOnboarded: 6,
+    dealsClosed: 4,
+    pipelineKobo: 26_950_000_00,
+    commissionsClearedKobo: 1_347_500_00,
+  },
+  {
+    name: 'Tomi Akinola',
+    role: 'Documentation Officer',
+    agentsCount: 2,
+    customersOnboarded: 3,
+    dealsClosed: 1,
+    pipelineKobo: 8_100_000_00,
+    commissionsClearedKobo: 405_000_00,
+  },
+  {
+    name: 'Chinaza Okafor',
+    role: 'Senior Agent',
+    agentsCount: 4,
+    customersOnboarded: 8,
+    dealsClosed: 5,
+    pipelineKobo: 34_200_000_00,
+    commissionsClearedKobo: 1_710_000_00,
+  },
 ];
+
+type PeriodKey = 'this' | 'p3' | 'p6' | 'p12' | 'all';
+const PERIOD_OPTIONS: { key: PeriodKey; label: string; multiplier: number }[] = [
+  { key: 'this', label: 'This month', multiplier: 1 },
+  { key: 'p3', label: 'Past 3 months', multiplier: 2.6 },
+  { key: 'p6', label: 'Past 6 months', multiplier: 4.2 },
+  { key: 'p12', label: 'Past 12 months', multiplier: 7.8 },
+  { key: 'all', label: 'All time', multiplier: 11.4 },
+];
+
+type SortKey = 'name' | 'agentsCount' | 'customersOnboarded' | 'dealsClosed' | 'pipelineKobo' | 'commissionsClearedKobo' | 'avgDealKobo';
+type SortDir = 'desc' | 'asc' | null;
 
 export default function AdminOverview() {
   const liveDeals = useQuery(api.deals.list, IS_PREVIEW ? 'skip' : { limit: 200 });
@@ -42,32 +80,8 @@ export default function AdminOverview() {
         <KPI icon={<Wallet className="h-5 w-5" />} label="Pending payouts" value={formatNGN(pendingCommissions)} tint="orange" small />
       </div>
 
-      {/* Per-staff performance */}
-      <Card>
-        <CardContent className="pt-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="font-heading text-xl">Staff performance</h2>
-            <Link href="/admin/users" className="text-sm text-brand-green hover:underline">Manage team →</Link>
-          </div>
-          <div className="space-y-2">
-            {PREVIEW_STAFF_PERFORMANCE.map((s) => (
-              <div key={s.name} className="rounded-md border border-border-subtle p-3 sm:p-4">
-                <div className="flex items-start justify-between gap-3 flex-wrap">
-                  <div>
-                    <p className="font-medium text-ink">{s.name}</p>
-                    <p className="text-xs text-ink-soft">{s.role}</p>
-                  </div>
-                  <p className="mono tabular text-sm font-semibold">{formatNGN(s.totalKobo)}</p>
-                </div>
-                <div className="mt-3 flex gap-4 text-xs text-ink-muted">
-                  <span><span className="text-ink-soft">Agents:</span> <span className="font-medium text-ink">{s.agentsCount}</span></span>
-                  <span><span className="text-ink-soft">Deals:</span> <span className="font-medium text-ink">{s.dealsCount}</span></span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+      {/* Per-staff performance — monthly table */}
+      <StaffPerformanceCard />
 
       {/* Commissions snapshot */}
       <Card>
@@ -121,6 +135,223 @@ export default function AdminOverview() {
           </div>
         </CardContent>
       </Card>
+    </div>
+  );
+}
+
+function StaffPerformanceCard() {
+  const [period, setPeriod] = useState<PeriodKey>('this');
+  const [sortKey, setSortKey] = useState<SortKey | null>(null);
+  const [sortDir, setSortDir] = useState<SortDir>(null);
+
+  const periodOption = PERIOD_OPTIONS.find((p) => p.key === period) ?? PERIOD_OPTIONS[0];
+  const multiplier = periodOption.multiplier;
+
+  // Apply period multiplier to the base seed (agents count is a headcount, not period-scaled)
+  const rows = useMemo(() => {
+    const scaled = PREVIEW_STAFF_PERFORMANCE.map((s) => {
+      const customersOnboarded = Math.round(s.customersOnboarded * multiplier);
+      const dealsClosed = Math.round(s.dealsClosed * multiplier);
+      const pipelineKobo = Math.round(s.pipelineKobo * multiplier);
+      const commissionsClearedKobo = Math.round(s.commissionsClearedKobo * multiplier);
+      const avgDealKobo = dealsClosed > 0 ? Math.round(pipelineKobo / dealsClosed) : 0;
+      return {
+        name: s.name,
+        role: s.role,
+        agentsCount: s.agentsCount,
+        customersOnboarded,
+        dealsClosed,
+        pipelineKobo,
+        commissionsClearedKobo,
+        avgDealKobo,
+      };
+    });
+
+    if (!sortKey || !sortDir) return scaled;
+    const sorted = [...scaled].sort((a, b) => {
+      const av = a[sortKey];
+      const bv = b[sortKey];
+      if (typeof av === 'string' && typeof bv === 'string') {
+        return sortDir === 'asc' ? av.localeCompare(bv) : bv.localeCompare(av);
+      }
+      const an = Number(av);
+      const bn = Number(bv);
+      return sortDir === 'asc' ? an - bn : bn - an;
+    });
+    return sorted;
+  }, [multiplier, sortKey, sortDir]);
+
+  // Totals row
+  const totals = useMemo(() => {
+    const t = rows.reduce(
+      (acc, r) => ({
+        agentsCount: acc.agentsCount + r.agentsCount,
+        customersOnboarded: acc.customersOnboarded + r.customersOnboarded,
+        dealsClosed: acc.dealsClosed + r.dealsClosed,
+        pipelineKobo: acc.pipelineKobo + r.pipelineKobo,
+        commissionsClearedKobo: acc.commissionsClearedKobo + r.commissionsClearedKobo,
+      }),
+      { agentsCount: 0, customersOnboarded: 0, dealsClosed: 0, pipelineKobo: 0, commissionsClearedKobo: 0 }
+    );
+    const avgDealKobo = t.dealsClosed > 0 ? Math.round(t.pipelineKobo / t.dealsClosed) : 0;
+    return { ...t, avgDealKobo };
+  }, [rows]);
+
+  function cycleSort(key: SortKey) {
+    if (sortKey !== key) {
+      setSortKey(key);
+      setSortDir('desc');
+      return;
+    }
+    // same key — cycle desc -> asc -> none
+    if (sortDir === 'desc') setSortDir('asc');
+    else if (sortDir === 'asc') {
+      setSortKey(null);
+      setSortDir(null);
+    } else {
+      setSortDir('desc');
+    }
+  }
+
+  return (
+    <Card>
+      <CardContent className="pt-6">
+        <div className="flex items-center justify-between gap-3 mb-4 flex-wrap">
+          <div className="flex items-center gap-3 flex-wrap">
+            <h2 className="font-heading text-xl">Staff performance</h2>
+            <Link href="/admin/users" className="text-sm text-brand-green hover:underline">Manage team →</Link>
+          </div>
+          <div className="relative">
+            <select
+              value={period}
+              onChange={(e) => setPeriod(e.target.value as PeriodKey)}
+              className="appearance-none rounded-md border border-border-subtle bg-canvas px-3 py-2 pr-8 text-sm text-ink hover:border-border focus:outline-none focus:ring-2 focus:ring-brand-green/30"
+              aria-label="Select period"
+            >
+              {PERIOD_OPTIONS.map((p) => (
+                <option key={p.key} value={p.key}>{p.label}</option>
+              ))}
+            </select>
+            <ChevronDown className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-ink-soft" />
+          </div>
+        </div>
+
+        {/* Desktop table */}
+        <div className="hidden md:block overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-border-subtle text-left text-2xs uppercase tracking-wider text-ink-soft">
+                <SortHeader label="Staff" align="left" active={sortKey === 'name'} dir={sortDir} onClick={() => cycleSort('name')} />
+                <SortHeader label="Agents" align="right" active={sortKey === 'agentsCount'} dir={sortDir} onClick={() => cycleSort('agentsCount')} />
+                <SortHeader label="Customers onboarded" align="right" active={sortKey === 'customersOnboarded'} dir={sortDir} onClick={() => cycleSort('customersOnboarded')} />
+                <SortHeader label="Deals closed" align="right" active={sortKey === 'dealsClosed'} dir={sortDir} onClick={() => cycleSort('dealsClosed')} />
+                <SortHeader label="Pipeline value" align="right" active={sortKey === 'pipelineKobo'} dir={sortDir} onClick={() => cycleSort('pipelineKobo')} />
+                <SortHeader label="Commissions cleared" align="right" active={sortKey === 'commissionsClearedKobo'} dir={sortDir} onClick={() => cycleSort('commissionsClearedKobo')} />
+                <SortHeader label="Avg deal size" align="right" active={sortKey === 'avgDealKobo'} dir={sortDir} onClick={() => cycleSort('avgDealKobo')} />
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((r) => (
+                <tr key={r.name} className="border-b border-border-subtle last:border-b-0 hover:bg-canvas-warm/50">
+                  <td className="py-3 pr-3">
+                    <p className="font-medium text-ink">{r.name}</p>
+                    <p className="text-xs text-ink-soft">{r.role}</p>
+                  </td>
+                  <td className="py-3 px-3 text-right mono tabular text-ink">{r.agentsCount}</td>
+                  <td className="py-3 px-3 text-right mono tabular text-ink">{r.customersOnboarded}</td>
+                  <td className="py-3 px-3 text-right mono tabular text-ink">{r.dealsClosed}</td>
+                  <td className="py-3 px-3 text-right mono tabular text-ink">{formatNGN(r.pipelineKobo)}</td>
+                  <td className="py-3 px-3 text-right mono tabular text-ink">{formatNGN(r.commissionsClearedKobo)}</td>
+                  <td className="py-3 pl-3 text-right mono tabular text-ink">{formatNGN(r.avgDealKobo)}</td>
+                </tr>
+              ))}
+            </tbody>
+            <tfoot>
+              <tr className="border-t-2 border-border-subtle bg-canvas-warm/40">
+                <td className="py-3 pr-3 font-semibold text-ink text-2xs uppercase tracking-wider">Totals</td>
+                <td className="py-3 px-3 text-right mono tabular font-semibold text-ink">{totals.agentsCount}</td>
+                <td className="py-3 px-3 text-right mono tabular font-semibold text-ink">{totals.customersOnboarded}</td>
+                <td className="py-3 px-3 text-right mono tabular font-semibold text-ink">{totals.dealsClosed}</td>
+                <td className="py-3 px-3 text-right mono tabular font-semibold text-ink">{formatNGN(totals.pipelineKobo)}</td>
+                <td className="py-3 px-3 text-right mono tabular font-semibold text-ink">{formatNGN(totals.commissionsClearedKobo)}</td>
+                <td className="py-3 pl-3 text-right mono tabular font-semibold text-ink">{formatNGN(totals.avgDealKobo)}</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+
+        {/* Mobile: stacked cards per staff */}
+        <div className="md:hidden space-y-3">
+          {rows.map((r) => (
+            <div key={r.name} className="rounded-md border border-border-subtle p-3">
+              <div className="flex items-start justify-between gap-3 flex-wrap">
+                <div>
+                  <p className="font-medium text-ink">{r.name}</p>
+                  <p className="text-xs text-ink-soft">{r.role}</p>
+                </div>
+                <p className="mono tabular text-sm font-semibold text-ink">{formatNGN(r.pipelineKobo)}</p>
+              </div>
+              <dl className="mt-3 grid grid-cols-2 gap-x-3 gap-y-2 text-xs">
+                <MobileStat label="Agents" value={String(r.agentsCount)} />
+                <MobileStat label="Customers" value={String(r.customersOnboarded)} />
+                <MobileStat label="Deals closed" value={String(r.dealsClosed)} />
+                <MobileStat label="Avg deal" value={formatNGN(r.avgDealKobo)} />
+                <MobileStat label="Pipeline" value={formatNGN(r.pipelineKobo)} />
+                <MobileStat label="Commissions cleared" value={formatNGN(r.commissionsClearedKobo)} />
+              </dl>
+            </div>
+          ))}
+          {/* Mobile totals */}
+          <div className="rounded-md border-2 border-border-subtle bg-canvas-warm/40 p-3">
+            <p className="text-2xs uppercase tracking-wider font-semibold text-ink mb-2">Totals</p>
+            <dl className="grid grid-cols-2 gap-x-3 gap-y-2 text-xs">
+              <MobileStat label="Agents" value={String(totals.agentsCount)} bold />
+              <MobileStat label="Customers" value={String(totals.customersOnboarded)} bold />
+              <MobileStat label="Deals closed" value={String(totals.dealsClosed)} bold />
+              <MobileStat label="Avg deal" value={formatNGN(totals.avgDealKobo)} bold />
+              <MobileStat label="Pipeline" value={formatNGN(totals.pipelineKobo)} bold />
+              <MobileStat label="Commissions cleared" value={formatNGN(totals.commissionsClearedKobo)} bold />
+            </dl>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function SortHeader({
+  label,
+  align,
+  active,
+  dir,
+  onClick,
+}: {
+  label: string;
+  align: 'left' | 'right';
+  active: boolean;
+  dir: SortDir;
+  onClick: () => void;
+}) {
+  const Icon = !active || !dir ? ArrowUpDown : dir === 'desc' ? ArrowDown : ArrowUp;
+  return (
+    <th className={`py-2.5 font-medium ${align === 'right' ? 'text-right pl-3' : 'pr-3'}`}>
+      <button
+        type="button"
+        onClick={onClick}
+        className={`inline-flex items-center gap-1.5 hover:text-ink transition-colors ${active ? 'text-ink' : ''} ${align === 'right' ? 'flex-row-reverse' : ''}`}
+      >
+        <span>{label}</span>
+        <Icon className="h-3 w-3" />
+      </button>
+    </th>
+  );
+}
+
+function MobileStat({ label, value, bold }: { label: string; value: string; bold?: boolean }) {
+  return (
+    <div>
+      <dt className="text-ink-soft">{label}</dt>
+      <dd className={`mono tabular text-ink ${bold ? 'font-semibold' : ''}`}>{value}</dd>
     </div>
   );
 }

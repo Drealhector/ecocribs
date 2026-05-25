@@ -25,7 +25,6 @@ const config: NextConfig = {
     remotePatterns: [
       { protocol: 'https', hostname: 'ecocribsrealty.com' },
       { protocol: 'https', hostname: 'docs.ecocribsrealty.com' },
-      { protocol: 'https', hostname: 'img.clerk.com' },
     ],
   },
   async headers() {
