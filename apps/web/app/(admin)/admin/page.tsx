@@ -8,7 +8,7 @@ import { Card, CardContent } from '@/components/design/Card';
 import { StatusPill } from '@/components/design/StatusPill';
 import { formatNGN } from '@/lib/format';
 import { IS_PREVIEW, PREVIEW_DEALS, PREVIEW_PROPERTIES, PREVIEW_COMMISSIONS } from '@/lib/preview';
-import { TrendingUp, Users, UserCircle2, Wallet, ArrowRight, ChevronDown, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
+import { TrendingUp, Users, UserCircle2, Wallet, ArrowRight, ChevronDown, ArrowUpDown, ArrowUp, ArrowDown, Check } from 'lucide-react';
 
 // Preview seed — staff-by-staff breakdown of the org (base = "This month")
 const PREVIEW_STAFF_PERFORMANCE = [
@@ -80,6 +80,9 @@ export default function AdminOverview() {
         <KPI icon={<Wallet className="h-5 w-5" />} label="Pending payouts" value={formatNGN(pendingCommissions)} tint="orange" small />
       </div>
 
+      {/* Set commission % on any deal — inline */}
+      <SetCommissionsCard deals={deals} />
+
       {/* Per-staff performance — monthly table */}
       <StaffPerformanceCard />
 
@@ -139,10 +142,103 @@ export default function AdminOverview() {
   );
 }
 
+function SetCommissionsCard({ deals }: { deals: any[] }) {
+  // Local per-deal commission state (demo). In prod, hydrate from
+  // api.commissions.listAll and call api.commissions.setForDeal on save.
+  const [pct, setPct] = useState<Record<string, string>>({});
+  const [saved, setSaved] = useState<Record<string, number>>({});
+  const [savingId, setSavingId] = useState<string | null>(null);
+
+  const top = deals.slice(0, 5);
+
+  const save = async (deal: any) => {
+    const raw = pct[deal._id] ?? '';
+    const n = Number(raw);
+    if (!Number.isFinite(n) || n < 0 || n > 50) {
+      alert('Enter a percentage between 0 and 50.');
+      return;
+    }
+    setSavingId(deal._id);
+    await new Promise((r) => setTimeout(r, 300));
+    setSaved((prev) => ({ ...prev, [deal._id]: n }));
+    setSavingId(null);
+  };
+
+  return (
+    <Card className="border-brand-green/30">
+      <CardContent className="pt-6">
+        <div className="flex items-start gap-3 mb-4 flex-wrap">
+          <span className="grid h-10 w-10 place-items-center rounded-md bg-brand-green-soft text-brand-green shrink-0">
+            <Wallet className="h-5 w-5" />
+          </span>
+          <div className="flex-1 min-w-0">
+            <h2 className="font-heading text-xl">Set commissions</h2>
+            <p className="text-sm text-ink-soft mt-0.5">
+              Type a percentage next to each deal — the agent gets credited that share when the deal closes.
+            </p>
+          </div>
+          <Link href="/admin/commissions" className="text-sm text-brand-green hover:underline inline-flex items-center gap-1 self-center">
+            Full ledger <ArrowRight className="h-3 w-3" />
+          </Link>
+        </div>
+
+        <div className="space-y-2">
+          {top.map((d) => {
+            const prop = PREVIEW_PROPERTIES[d.propertyId as unknown as string];
+            const currentPct = pct[d._id] ?? '';
+            const isSaved = saved[d._id] !== undefined;
+            const previewKobo = Number(currentPct) > 0
+              ? Math.round((d.purchasePriceKobo * Number(currentPct)) / 100)
+              : 0;
+
+            return (
+              <div key={d._id} className="rounded-md border border-border-subtle p-3 flex items-center gap-3 flex-wrap">
+                <div className="min-w-0 flex-1">
+                  <p className="font-medium text-ink truncate">{d.buyerName}</p>
+                  <p className="text-xs text-ink-soft truncate">{prop?.name ?? '—'} · {formatNGN(d.purchasePriceKobo)}</p>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  <div className="relative">
+                    <input
+                      type="number"
+                      step="0.05"
+                      min="0"
+                      max="50"
+                      value={currentPct}
+                      onChange={(e) => setPct((prev) => ({ ...prev, [d._id]: e.target.value }))}
+                      placeholder="0.00"
+                      className="w-24 h-10 rounded-md border border-border bg-canvas px-3 pr-8 text-sm text-right text-ink focus-visible:outline-none focus-visible:border-brand-orange focus-visible:ring-2 focus-visible:ring-brand-orange/30"
+                    />
+                    <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-sm text-ink-soft">%</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => save(d)}
+                    disabled={!currentPct || savingId === d._id}
+                    className="inline-flex items-center justify-center gap-1.5 h-10 px-3 rounded-md bg-brand-green text-white text-sm font-medium hover:bg-brand-green-deep disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    {savingId === d._id ? 'Saving…' : isSaved ? <><Check className="h-4 w-4" /> Saved</> : 'Set'}
+                  </button>
+                </div>
+                {Number(currentPct) > 0 && (
+                  <p className="text-2xs text-brand-green w-full mono tabular sm:w-auto sm:ml-auto sm:text-right">
+                    Agent will earn {formatNGN(previewKobo)} on this deal
+                  </p>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 function StaffPerformanceCard() {
   const [period, setPeriod] = useState<PeriodKey>('this');
-  const [sortKey, setSortKey] = useState<SortKey | null>(null);
-  const [sortDir, setSortDir] = useState<SortDir>(null);
+  // Default: best performer first — sorted by pipeline ₦ descending
+  const [sortKey, setSortKey] = useState<SortKey | null>('pipelineKobo');
+  const [sortDir, setSortDir] = useState<SortDir>('desc');
 
   const periodOption = PERIOD_OPTIONS.find((p) => p.key === period) ?? PERIOD_OPTIONS[0];
   const multiplier = periodOption.multiplier;
@@ -241,6 +337,7 @@ function StaffPerformanceCard() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-border-subtle text-left text-2xs uppercase tracking-wider text-ink-soft">
+                <th className="py-2.5 pr-2 w-12 font-medium">Rank</th>
                 <SortHeader label="Staff" align="left" active={sortKey === 'name'} dir={sortDir} onClick={() => cycleSort('name')} />
                 <SortHeader label="Agents" align="right" active={sortKey === 'agentsCount'} dir={sortDir} onClick={() => cycleSort('agentsCount')} />
                 <SortHeader label="Customers onboarded" align="right" active={sortKey === 'customersOnboarded'} dir={sortDir} onClick={() => cycleSort('customersOnboarded')} />
@@ -251,8 +348,11 @@ function StaffPerformanceCard() {
               </tr>
             </thead>
             <tbody>
-              {rows.map((r) => (
+              {rows.map((r, i) => (
                 <tr key={r.name} className="border-b border-border-subtle last:border-b-0 hover:bg-canvas-warm/50">
+                  <td className="py-3 pr-2">
+                    <RankBadge rank={i + 1} />
+                  </td>
                   <td className="py-3 pr-3">
                     <p className="font-medium text-ink">{r.name}</p>
                     <p className="text-xs text-ink-soft">{r.role}</p>
@@ -268,6 +368,7 @@ function StaffPerformanceCard() {
             </tbody>
             <tfoot>
               <tr className="border-t-2 border-border-subtle bg-canvas-warm/40">
+                <td className="py-3 pr-2"></td>
                 <td className="py-3 pr-3 font-semibold text-ink text-2xs uppercase tracking-wider">Totals</td>
                 <td className="py-3 px-3 text-right mono tabular font-semibold text-ink">{totals.agentsCount}</td>
                 <td className="py-3 px-3 text-right mono tabular font-semibold text-ink">{totals.customersOnboarded}</td>
@@ -282,12 +383,15 @@ function StaffPerformanceCard() {
 
         {/* Mobile: stacked cards per staff */}
         <div className="md:hidden space-y-3">
-          {rows.map((r) => (
+          {rows.map((r, i) => (
             <div key={r.name} className="rounded-md border border-border-subtle p-3">
               <div className="flex items-start justify-between gap-3 flex-wrap">
-                <div>
-                  <p className="font-medium text-ink">{r.name}</p>
-                  <p className="text-xs text-ink-soft">{r.role}</p>
+                <div className="flex items-center gap-3 min-w-0">
+                  <RankBadge rank={i + 1} />
+                  <div className="min-w-0">
+                    <p className="font-medium text-ink truncate">{r.name}</p>
+                    <p className="text-xs text-ink-soft truncate">{r.role}</p>
+                  </div>
                 </div>
                 <p className="mono tabular text-sm font-semibold text-ink">{formatNGN(r.pipelineKobo)}</p>
               </div>
@@ -353,6 +457,25 @@ function MobileStat({ label, value, bold }: { label: string; value: string; bold
       <dt className="text-ink-soft">{label}</dt>
       <dd className={`mono tabular text-ink ${bold ? 'font-semibold' : ''}`}>{value}</dd>
     </div>
+  );
+}
+
+function RankBadge({ rank }: { rank: number }) {
+  const isFirst = rank === 1;
+  const isSecond = rank === 2;
+  const isThird = rank === 3;
+  return (
+    <span
+      className={`inline-flex h-7 w-7 items-center justify-center rounded-full font-heading text-sm font-semibold shrink-0 ${
+        isFirst ? 'bg-brand-gold text-white shadow-soft' :
+        isSecond ? 'bg-brand-green-soft text-brand-green border border-brand-green/30' :
+        isThird ? 'bg-brand-orange-soft text-brand-orange border border-brand-orange/30' :
+        'bg-canvas-warm text-ink-soft border border-border'
+      }`}
+      aria-label={`Rank ${rank}`}
+    >
+      {rank}
+    </span>
   );
 }
 
