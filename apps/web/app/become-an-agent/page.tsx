@@ -27,6 +27,11 @@ export default function BecomeAnAgent() {
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    // Demo mode: any input (or none) goes straight to the agent dashboard
+    if (IS_PREVIEW) {
+      router.push('/agent');
+      return;
+    }
     setError(null);
     if (!fullName.trim()) return setError('Full name is required.');
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return setError('Enter a valid email.');
@@ -34,17 +39,9 @@ export default function BecomeAnAgent() {
 
     setSubmitting(true);
     try {
-      if (IS_PREVIEW) {
-        // demo shortcut — preview routes straight to /agent
-        router.push('/agent');
-        return;
-      }
-      // 1) create auth user via Convex Auth Password provider
       await signIn('password', { email, password, flow: 'signUp' });
-      // 2) wait briefly for session to commit, then look up our userId
       const userId = await pollForUser();
       if (!userId) throw new Error('Account created but session not ready. Refresh and sign in.');
-      // 3) attach agent membership with auto-staff assignment
       await completeSignup({ userId, fullName: fullName.trim() });
       router.replace('/agent');
     } catch (err) {

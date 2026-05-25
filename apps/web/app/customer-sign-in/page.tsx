@@ -3,49 +3,23 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { useAuthActions } from '@/lib/auth-hooks';
 import { Logo } from '@/components/design/Logo';
 import { Card, CardContent } from '@/components/design/Card';
 import { Input, Label } from '@/components/design/Input';
 import { PasswordInput } from '@/components/design/PasswordInput';
 import { Button } from '@/components/design/Button';
-import { MessageCircle, AlertCircle } from 'lucide-react';
-import { checkDemoCredentials } from '@/lib/demo-auth';
-import { IS_PREVIEW, PREVIEW_DEALS } from '@/lib/preview';
+import { MessageCircle } from 'lucide-react';
+import { PREVIEW_DEALS } from '@/lib/preview';
 
 export default function CustomerSignIn() {
   const router = useRouter();
-  const { signIn } = useAuthActions();
-
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState<string | null>(null);
-  const [submitting, setSubmitting] = useState(false);
 
-  const onSubmit = async (e: React.FormEvent) => {
+  const onSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
-    setSubmitting(true);
-
-    // In preview/demo mode, check the demo creds first — instant entry
-    // into the customer portal with seed data. Falls through to real
-    // Convex Auth signIn for any other credentials.
-    if (IS_PREVIEW && checkDemoCredentials(email, password)) {
-      router.push(`/d/${PREVIEW_DEALS[0]!._id}`);
-      return;
-    }
-
-    try {
-      await signIn('password', { email, password, flow: 'signIn' });
-      router.push(`/d/${PREVIEW_DEALS[0]!._id}`);
-    } catch (err) {
-      setError(
-        err instanceof Error
-          ? `Sign-in failed: ${err.message.replace(/^.*?Error:\s*/, '')}`
-          : 'Invalid email or password.',
-      );
-      setSubmitting(false);
-    }
+    // Demo mode: any input (or no input) opens the customer portal
+    router.push(`/d/${PREVIEW_DEALS[0]!._id}`);
   };
 
   return (
@@ -70,12 +44,8 @@ export default function CustomerSignIn() {
                   autoComplete="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="customer@gmail.com"
-                  required
+                  placeholder="your.name@gmail.com"
                 />
-                <p className="text-2xs text-ink-soft mt-1.5">
-                  Use your personal email — Gmail, Yahoo, Outlook, whatever you check.
-                </p>
               </div>
               <div>
                 <Label htmlFor="password">Password</Label>
@@ -84,24 +54,11 @@ export default function CustomerSignIn() {
                   autoComplete="current-password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  required
                 />
               </div>
-              {error && (
-                <p className="text-sm text-danger flex items-start gap-2" role="alert">
-                  <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" /> {error}
-                </p>
-              )}
-              <Button type="submit" disabled={submitting} className="w-full">
-                {submitting ? 'Signing in…' : 'Open my portal'}
+              <Button type="submit" className="w-full">
+                Open my portal
               </Button>
-
-              {IS_PREVIEW && (
-                <div className="pt-3 border-t border-border-subtle text-2xs text-ink-soft text-center mono">
-                  Demo · customer@gmail.com · 1234
-                </div>
-              )}
-
               <p className="text-2xs text-ink-soft text-center pt-2 flex items-center justify-center gap-1.5">
                 <MessageCircle className="h-3 w-3" />
                 First time? Use the{' '}

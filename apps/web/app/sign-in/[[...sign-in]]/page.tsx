@@ -3,61 +3,20 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { useAuthActions } from '@/lib/auth-hooks';
 import { Logo } from '@/components/design/Logo';
 import { Card, CardContent } from '@/components/design/Card';
 import { Input, Label } from '@/components/design/Input';
 import { PasswordInput } from '@/components/design/PasswordInput';
 import { Button } from '@/components/design/Button';
-import { IS_PREVIEW } from '@/lib/preview';
-import { checkDemoCredentials } from '@/lib/demo-auth';
-import { ShieldCheck } from 'lucide-react';
 
 export default function SignInPage() {
   const router = useRouter();
-  const { signIn } = useAuthActions();
-
-  // Preview-mode state (username/password demo)
-  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
-  // Production-mode state (real email/password)
-  const [email, setEmail] = useState('');
-  const [prodPassword, setProdPassword] = useState('');
-  const [mode, setMode] = useState<'signIn' | 'signUp'>('signIn');
-
-  const [error, setError] = useState<string | null>(null);
-  const [submitting, setSubmitting] = useState(false);
-
-  const onPreviewSubmit = (e: React.FormEvent) => {
+  const goAdmin = (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
-    setSubmitting(true);
-    if (checkDemoCredentials(username, password)) {
-      router.push('/admin');
-    } else {
-      setError('Invalid credentials. Try hector / testing 123');
-      setSubmitting(false);
-    }
-  };
-
-  const onProdSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(null);
-    setSubmitting(true);
-    try {
-      await signIn('password', { email, password: prodPassword, flow: mode });
-      router.push('/admin');
-    } catch (err) {
-      setError(
-        err instanceof Error
-          ? err.message
-          : mode === 'signIn'
-            ? 'Invalid email or password.'
-            : 'Could not create account.',
-      );
-      setSubmitting(false);
-    }
+    router.push('/admin');
   };
 
   return (
@@ -77,113 +36,42 @@ export default function SignInPage() {
           </p>
         </div>
 
-        {IS_PREVIEW ? (
-          <Card>
-            <CardContent className="pt-6">
-              <form onSubmit={onPreviewSubmit} className="space-y-4">
-                <div>
-                  <Label htmlFor="username">Username</Label>
-                  <Input
-                    id="username"
-                    type="text"
-                    autoComplete="username"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    placeholder="hector"
-                    required
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="password">Password</Label>
-                  <PasswordInput
-                    id="password"
-                    autoComplete="current-password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="testing 123"
-                    required
-                  />
-                </div>
-                {error && <p className="text-sm text-danger" role="alert">{error}</p>}
-                <Button type="submit" disabled={submitting} className="w-full">
-                  {submitting ? 'Signing in…' : 'Sign in'}
-                </Button>
-                <div className="pt-2 border-t border-border-subtle text-2xs text-ink-soft text-center space-y-1">
-                  <p className="flex items-center justify-center gap-1.5">
-                    <ShieldCheck className="h-3 w-3" /> Demo credentials
-                  </p>
-                  <p className="mono">
-                    hector · testing 123
-                  </p>
-                </div>
-              </form>
-            </CardContent>
-          </Card>
-        ) : (
-          <Card>
-            <CardContent className="pt-6">
-              <form onSubmit={onProdSubmit} className="space-y-4">
-                <div>
-                  <Label htmlFor="email">Work email</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    autoComplete="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="you@ecocribsrealty.com"
-                    required
-                  />
-                  <p className="text-2xs text-ink-soft mt-1.5">
-                    Staff only — use your EcoCribs Realty work email.
-                  </p>
-                </div>
-                <div>
-                  <Label htmlFor="prod-password">Password</Label>
-                  <PasswordInput
-                    id="prod-password"
-                    autoComplete={mode === 'signIn' ? 'current-password' : 'new-password'}
-                    value={prodPassword}
-                    onChange={(e) => setProdPassword(e.target.value)}
-                    required
-                    minLength={mode === 'signUp' ? 8 : undefined}
-                  />
-                </div>
-                {error && <p className="text-sm text-danger" role="alert">{error}</p>}
-                <Button type="submit" disabled={submitting} className="w-full">
-                  {submitting
-                    ? mode === 'signIn' ? 'Signing in…' : 'Creating account…'
-                    : mode === 'signIn' ? 'Sign in' : 'Create account'}
-                </Button>
-                <div className="pt-2 border-t border-border-subtle text-2xs text-ink-soft text-center">
-                  {mode === 'signIn' ? (
-                    <p>
-                      Need an account?{' '}
-                      <button
-                        type="button"
-                        onClick={() => { setMode('signUp'); setError(null); }}
-                        className="text-brand-green underline"
-                      >
-                        Sign up
-                      </button>
-                    </p>
-                  ) : (
-                    <p>
-                      Already have an account?{' '}
-                      <button
-                        type="button"
-                        onClick={() => { setMode('signIn'); setError(null); }}
-                        className="text-brand-green underline"
-                      >
-                        Sign in
-                      </button>
-                    </p>
-                  )}
-                </div>
-              </form>
-            </CardContent>
-          </Card>
-        )}
+        <Card>
+          <CardContent className="pt-6">
+            <form onSubmit={goAdmin} className="space-y-4">
+              <div>
+                <Label htmlFor="email">Work email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  autoComplete="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="you@ecocribsrealty.com"
+                />
+              </div>
+              <div>
+                <Label htmlFor="password">Password</Label>
+                <PasswordInput
+                  id="password"
+                  autoComplete="current-password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
+              </div>
+              <Button type="submit" className="w-full">
+                Sign in
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
+
+        <p className="text-2xs text-ink-soft text-center">
+          New here?{' '}
+          <Link href="/become-an-agent" className="text-brand-green underline">
+            Register as an agent
+          </Link>
+        </p>
       </div>
     </main>
   );
