@@ -36,6 +36,12 @@ export default function Landing() {
                   <Link href="/accept-invite">I have an invite</Link>
                 </Button>
               </div>
+              <p className="text-xs text-ink-soft pt-2">
+                Want to earn referral commission?{' '}
+                <Link href="/become-an-agent" className="text-brand-green underline font-medium">
+                  Become an agent
+                </Link>
+              </p>
             </div>
 
             <Card className="shadow-card max-w-md w-full mx-auto lg:mx-0 lg:ml-auto">

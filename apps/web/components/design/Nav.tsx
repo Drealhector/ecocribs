@@ -86,6 +86,13 @@ export function Nav() {
               I have an invite
               <span aria-hidden className="text-ink-soft">›</span>
             </Link>
+            <Link
+              href="/become-an-agent"
+              className="flex items-center justify-between rounded-md px-4 py-4 text-base font-medium text-ink hover:bg-canvas-warm"
+            >
+              Become an agent
+              <span aria-hidden className="text-ink-soft">›</span>
+            </Link>
             <div className="mt-4 px-1">
               <Button asChild size="lg" className="w-full">
                 <Link href="/customer-sign-in">Customer sign in</Link>

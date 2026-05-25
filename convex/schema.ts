@@ -83,11 +83,17 @@ export default defineSchema({
     status: v.union(v.literal('active'), v.literal('revoked'), v.literal('pending')),
     teamIds: v.array(v.id('teams')),
     invitedBy: v.optional(v.id('users')),
+    // For agents only — the staff (manager / documentation_officer) who
+    // supervises them. Auto-assigned at signup (least-loaded staff).
+    assignedStaffUserId: v.optional(v.id('users')),
+    referredBy: v.optional(v.id('users')),
     createdAt: v.number(),
     revokedAt: v.optional(v.number()),
   })
     .index('by_user_org', ['userId', 'orgId'])
-    .index('by_org', ['orgId']),
+    .index('by_org', ['orgId'])
+    .index('by_org_role', ['orgId', 'role'])
+    .index('by_assigned_staff', ['assignedStaffUserId']),
 
   teams: defineTable({
     orgId: v.id('orgs'),
@@ -95,6 +101,43 @@ export default defineSchema({
     description: v.optional(v.string()),
     createdAt: v.number(),
   }).index('by_org', ['orgId']),
+
+  // ───────────────────────── Commissions ─────────────────────────
+  /**
+   * Per-deal commission. Optional — Boss decides whether to set one. If
+   * set, the agent (the user who brought the customer) gets credited the
+   * computed amount in their dashboard the moment the deal completes.
+   *
+   *   percentBps  — basis points; 250 = 2.50%. Stored as int to avoid
+   *                 floating-point drift. Used to recompute commissionKobo
+   *                 if the deal price ever changes.
+   *   commissionKobo — snapshot of the calculated amount at "set" time,
+   *                    refreshed on price/percent changes.
+   *   status: pending → cleared (or cancelled if deal falls through).
+   *   staffUserId — denormalised from the agent's assigned staff for
+   *                 fast "show me MY agents' commissions" filtering.
+   */
+  commissions: defineTable({
+    orgId: v.id('orgs'),
+    dealId: v.id('deals'),
+    agentUserId: v.id('users'),
+    staffUserId: v.optional(v.id('users')),
+    percentBps: v.number(),
+    commissionKobo: v.number(),
+    status: v.union(v.literal('pending'), v.literal('cleared'), v.literal('cancelled')),
+    setBy: v.id('users'),
+    setAt: v.number(),
+    updatedAt: v.number(),
+    clearedBy: v.optional(v.id('users')),
+    clearedAt: v.optional(v.number()),
+    clearedNote: v.optional(v.string()),
+    forwardedToStaffAt: v.optional(v.number()),
+    forwardedToStaffBy: v.optional(v.id('users')),
+  })
+    .index('by_org_status', ['orgId', 'status'])
+    .index('by_agent', ['agentUserId'])
+    .index('by_staff_status', ['staffUserId', 'status'])
+    .index('by_deal', ['dealId']),
 
   // ───────────────────────── Inventory ─────────────────────────
   properties: defineTable({

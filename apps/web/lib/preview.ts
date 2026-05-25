@@ -13,7 +13,7 @@ export const PREVIEW_DEALS = [
     buyerName: 'Adaeze Nwosu',
     buyerEmail: 'adaeze.nwosu@example.com',
     buyerPhone: '+2348012345678',
-    purchasePriceKobo: 4_500_000_00, // ₦4,500,000.00 in kobo
+    purchasePriceKobo: 4_500_000_00,
     paidAmountKobo: 1_500_000_00,
     state: 'CONTRACT_AWAITING_WITNESS',
     statusLabel: 'Awaiting Witness',
@@ -86,52 +86,19 @@ export const PREVIEW_DEALS = [
 ];
 
 export const PREVIEW_PROPERTIES: Record<string, any> = {
-  prop_demo_001: {
-    _id: 'prop_demo_001',
-    name: 'Plot 14, The Pastures',
-    estate: 'The Pastures',
-    state: 'Lagos',
-    lga: 'Ogombo',
-    sizeSqm: 600,
-    titleType: 'governors_consent',
-  },
-  prop_demo_002: {
-    _id: 'prop_demo_002',
-    name: 'Plot 27, Caribbean Lake City',
-    estate: 'Caribbean Lake City',
-    state: 'Lagos',
-    lga: 'Sangotedo',
-    sizeSqm: 1000,
-    titleType: 'c_of_o',
-  },
-  prop_demo_003: {
-    _id: 'prop_demo_003',
-    name: 'Plot 8, Glory Land Estate',
-    estate: 'Glory Land Estate',
-    state: 'Lagos',
-    lga: 'Epe',
-    sizeSqm: 600,
-    titleType: 'excision',
-  },
-  prop_demo_004: {
-    _id: 'prop_demo_004',
-    name: 'Plot 3, Uloma Estate',
-    estate: 'Uloma Estate',
-    state: 'Delta',
-    lga: 'Asaba',
-    sizeSqm: 500,
-    titleType: 'c_of_o',
-  },
-  prop_demo_005: {
-    _id: 'prop_demo_005',
-    name: 'Plot 22, Aphric Park',
-    estate: 'Aphric Park',
-    state: 'Lagos',
-    lga: 'Epe',
-    sizeSqm: 450,
-    titleType: 'gazette',
-  },
+  prop_demo_001: { _id: 'prop_demo_001', name: 'Plot 14, The Pastures', estate: 'The Pastures', state: 'Lagos', lga: 'Ogombo', sizeSqm: 600, titleType: 'governors_consent' },
+  prop_demo_002: { _id: 'prop_demo_002', name: 'Plot 27, Caribbean Lake City', estate: 'Caribbean Lake City', state: 'Lagos', lga: 'Sangotedo', sizeSqm: 1000, titleType: 'c_of_o' },
+  prop_demo_003: { _id: 'prop_demo_003', name: 'Plot 8, Glory Land Estate', estate: 'Glory Land Estate', state: 'Lagos', lga: 'Epe', sizeSqm: 600, titleType: 'excision' },
+  prop_demo_004: { _id: 'prop_demo_004', name: 'Plot 3, Uloma Estate', estate: 'Uloma Estate', state: 'Delta', lga: 'Asaba', sizeSqm: 500, titleType: 'c_of_o' },
+  prop_demo_005: { _id: 'prop_demo_005', name: 'Plot 22, Aphric Park', estate: 'Aphric Park', state: 'Lagos', lga: 'Epe', sizeSqm: 450, titleType: 'gazette' },
 };
+
+// Seed commissions for the agent dashboard
+export const PREVIEW_COMMISSIONS = [
+  { _id: 'com_demo_001', dealId: 'deal_demo_001', dealBuyer: 'Adaeze Nwosu', percentBps: 250, commissionKobo: 112_500_00, dealValueKobo: 4_500_000_00, status: 'pending', setAt: Date.now() - 14 * 86400_000 },
+  { _id: 'com_demo_002', dealId: 'deal_demo_002', dealBuyer: 'Ifeanyi Okeke', percentBps: 200, commissionKobo: 250_000_00, dealValueKobo: 12_500_000_00, status: 'pending', setAt: Date.now() - 88 * 86400_000 },
+  { _id: 'com_demo_003', dealId: 'deal_demo_004', dealBuyer: 'Chinwe Adeyemi', percentBps: 300, commissionKobo: 186_000_00, dealValueKobo: 6_200_000_00, status: 'cleared', setAt: Date.now() - 175 * 86400_000, clearedAt: Date.now() - 25 * 86400_000 },
+];
 
 export function previewDeal(id: string) {
   const deal = PREVIEW_DEALS.find((d) => d._id === id) ?? PREVIEW_DEALS[0]!;

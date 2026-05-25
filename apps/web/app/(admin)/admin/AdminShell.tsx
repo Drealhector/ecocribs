@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, FileText, Users, FilePlus, ScrollText, Menu, X } from 'lucide-react';
+import { LayoutDashboard, FileText, Users, FilePlus, ScrollText, Wallet, Menu, X } from 'lucide-react';
 import { Nav } from '@/components/design/Nav';
 import { cn } from '@/lib/utils';
 
@@ -11,6 +11,7 @@ const NAV_ITEMS = [
   { href: '/admin', icon: LayoutDashboard, label: 'Overview', match: (p: string) => p === '/admin' },
   { href: '/admin/deals', icon: FileText, label: 'Deals', match: (p: string) => p.startsWith('/admin/deals') },
   { href: '/admin/templates', icon: FilePlus, label: 'Templates', match: (p: string) => p.startsWith('/admin/templates') },
+  { href: '/admin/commissions', icon: Wallet, label: 'Commissions', match: (p: string) => p.startsWith('/admin/commissions') },
   { href: '/admin/users', icon: Users, label: 'Team', match: (p: string) => p.startsWith('/admin/users') },
   { href: '/admin/audit', icon: ScrollText, label: 'Activity', match: (p: string) => p.startsWith('/admin/audit') },
 ];

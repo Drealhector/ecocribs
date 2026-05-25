@@ -8,7 +8,9 @@
  * @module
  */
 
+import type * as agents from "../agents.js";
 import type * as auth from "../auth.js";
+import type * as commissions from "../commissions.js";
 import type * as crons from "../crons.js";
 import type * as deals from "../deals.js";
 import type * as documents_generate from "../documents/generate.js";
@@ -33,7 +35,9 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  agents: typeof agents;
   auth: typeof auth;
+  commissions: typeof commissions;
   crons: typeof crons;
   deals: typeof deals;
   "documents/generate": typeof documents_generate;
