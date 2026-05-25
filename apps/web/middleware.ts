@@ -4,26 +4,21 @@ import {
   nextjsMiddlewareRedirect,
 } from '@convex-dev/auth/nextjs/server';
 
-const IS_PREVIEW =
-  process.env.NEXT_PUBLIC_PREVIEW_MODE === 'true' ||
-  !process.env.NEXT_PUBLIC_CONVEX_URL;
+/**
+ * Demo mode — hardcoded to match lib/preview.ts. Skips ALL auth checks
+ * so the user can browse every section (admin, agent, customer, witness,
+ * sign pages) freely without logging in.
+ *
+ * Flip to `false` to re-enable real Convex Auth gating on /admin and the
+ * /sign-in redirect-when-already-authed behaviour.
+ */
+const IS_PREVIEW = true;
 
-const isAdmin = createRouteMatcher(['/admin(.*)']);
+const isAdmin = createRouteMatcher(['/admin(.*)', '/agent(.*)']);
 const isSignIn = createRouteMatcher(['/sign-in']);
 
-/**
- * Convex Auth middleware gates `/admin/*` behind an authenticated user
- * session and bounces already-signed-in users away from `/sign-in`.
- *
- * Witness routes (`/w/[token]`) and client deal routes (`/d/[dealId]`) are
- * intentionally NOT protected here — they use participant sessions enforced
- * server-side, not Convex Auth user sessions.
- *
- * In preview mode we short-circuit so reviewers can click through the full
- * design without a Convex deployment or sign-up.
- */
 export default convexAuthNextjsMiddleware(async (request, { convexAuth }) => {
-  if (IS_PREVIEW) return; // preview mode: no auth, no redirects
+  if (IS_PREVIEW) return; // demo: no auth, no redirects
 
   const authed = await convexAuth.isAuthenticated();
   if (isAdmin(request) && !authed) {
