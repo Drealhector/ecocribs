@@ -10,13 +10,6 @@ export function formatNGN(kobo: number, opts: { withSymbol?: boolean } = {}): st
   return `${withSymbol ? '₦' : ''}${intPart}${tail}`;
 }
 
-export function parseNGNToKobo(value: string): number {
-  const cleaned = value.replace(/[₦,\s]/g, '');
-  const n = Number(cleaned);
-  if (!Number.isFinite(n) || n < 0) throw new Error('INVALID_AMOUNT');
-  return Math.round(n * 100);
-}
-
 /**
  * PRD status vocabulary — surfaces directly to the user, so it must match.
  * Server-side state names are SCREAMING_SNAKE; UI labels are Title Case.

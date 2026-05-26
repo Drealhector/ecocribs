@@ -15,7 +15,6 @@ import type * as commissions from "../commissions.js";
 import type * as crons from "../crons.js";
 import type * as deals from "../deals.js";
 import type * as documents_generate from "../documents/generate.js";
-import type * as documents_signature from "../documents/signature.js";
 import type * as http from "../http.js";
 import type * as invitations from "../invitations.js";
 import type * as lib_audit from "../lib/audit.js";
@@ -43,7 +42,6 @@ declare const fullApi: ApiFromModules<{
   crons: typeof crons;
   deals: typeof deals;
   "documents/generate": typeof documents_generate;
-  "documents/signature": typeof documents_signature;
   http: typeof http;
   invitations: typeof invitations;
   "lib/audit": typeof lib_audit;

@@ -83,35 +83,3 @@ export async function readDocument(
   return doc;
 }
 
-/**
- * Allowed state transitions. The state machine is enforced server-side here
- * and only here — UI may hide buttons, but UI hiding is defense-in-depth only.
- */
-const TRANSITIONS: Record<string, string[]> = {
-  AWAITING_PAYMENT_CONFIRMATION: ['RECEIPT_SENT'],
-  RECEIPT_SENT: ['OFFER_LETTER_AWAITING_CLIENT'],
-  OFFER_LETTER_AWAITING_CLIENT: ['CONTRACT_AWAITING_CLIENT', 'OFFER_DECLINED'],
-  OFFER_DECLINED: ['OFFER_LETTER_AWAITING_CLIENT'], // admin re-engagement
-  CONTRACT_AWAITING_CLIENT: ['CONTRACT_AWAITING_WITNESS'],
-  CONTRACT_AWAITING_WITNESS: ['CONTRACT_SIGNED'],
-  CONTRACT_SIGNED: ['SURVEY_ISSUED'],
-  SURVEY_ISSUED: ['DEED_AWAITING_CLIENT'],
-  DEED_AWAITING_CLIENT: ['DEED_AWAITING_WITNESS', 'DEED_AWAITING_WET_INK'],
-  DEED_AWAITING_WET_INK: ['AWAITING_GOVERNORS_CONSENT'],
-  DEED_AWAITING_WITNESS: ['DEED_SIGNED'],
-  DEED_SIGNED: ['AWAITING_GOVERNORS_CONSENT', 'COMPLETED'],
-  AWAITING_GOVERNORS_CONSENT: ['COMPLETED'],
-  COMPLETED: ['ARCHIVED'],
-  ARCHIVED: [],
-};
-
-export function assertValidTransition(from: string, to: string): void {
-  const allowed = TRANSITIONS[from] ?? [];
-  if (!allowed.includes(to)) {
-    throw new Error(`INVALID_TRANSITION: ${from} → ${to}`);
-  }
-}
-
-export function isTerminal(state: string): boolean {
-  return state === 'COMPLETED' || state === 'ARCHIVED' || state === 'OFFER_DECLINED';
-}

@@ -1,39 +1,15 @@
 import { v } from 'convex/values';
-import { authedQuery, authedMutation, authedAction } from './lib/withAuth';
+import { authedQuery, authedAction } from './lib/withAuth';
 import { internalMutation } from './_generated/server';
-import { assertCan, assertValidTransition, readDeal } from './lib/authz';
+import { assertCan, readDeal } from './lib/authz';
 import { recordEvent } from './lib/audit';
 import { STATUS_LABEL } from './lib/formatters';
-import { generateToken, generatePin, hashToken, hashPin } from './lib/tokens';
+import { generateToken, hashToken } from './lib/tokens';
 import { internal } from './_generated/api';
 import type { Id } from './_generated/dataModel';
 
 const InitialDealState = 'AWAITING_PAYMENT_CONFIRMATION';
 const CLIENT_INVITE_TTL_MS = 72 * 60 * 60 * 1000;
-
-/**
- * Map (current state, document kind that was just fully signed) → next state.
- * Used by the signature recording flow to automatically advance the deal
- * to the next stage once the required parties have signed.
- */
-const NEXT_STATE_AFTER_SIGN: Record<string, string> = {
-  // Offer Letter signed by client → move to Contract stage
-  'OFFER_LETTER_AWAITING_CLIENT|offer_letter': 'CONTRACT_AWAITING_CLIENT',
-  // Contract signed by client → wait for witness
-  'CONTRACT_AWAITING_CLIENT|contract_of_sale': 'CONTRACT_AWAITING_WITNESS',
-  // Contract signed by witness → fully signed, await survey upload
-  'CONTRACT_AWAITING_WITNESS|contract_of_sale': 'CONTRACT_SIGNED',
-  // Survey uploaded → ready for deed
-  'SURVEY_ISSUED|survey_plan': 'DEED_AWAITING_CLIENT',
-  // Deed signed by client → wait for witness (or wet ink if hybrid)
-  'DEED_AWAITING_CLIENT|deed_of_assignment': 'DEED_AWAITING_WITNESS',
-  // Deed signed by witness → fully signed; admin closes manually
-  'DEED_AWAITING_WITNESS|deed_of_assignment': 'DEED_SIGNED',
-};
-
-export function nextStateAfterSign(currentState: string, docKind: string): string | null {
-  return NEXT_STATE_AFTER_SIGN[`${currentState}|${docKind}`] ?? null;
-}
 
 export const list = authedQuery({
   args: {
@@ -98,188 +74,12 @@ export const get = authedQuery({
   },
 });
 
-export const create = authedMutation({
-  args: {
-    propertyId: v.id('properties'),
-    buyerName: v.string(),
-    buyerEmail: v.string(),
-    buyerPhone: v.string(),
-    purchasePriceKobo: v.number(),
-    assignedAgentIds: v.array(v.id('users')),
-    documentationOfficerId: v.optional(v.id('users')),
-    requiresWetInkDeed: v.optional(v.boolean()),
-  },
-  handler: async (ctx, args) => {
-    const { orgId, role, user } = ctx;
-    assertCan(role, 'deal', 'W');
-
-    const property = await ctx.db.get(args.propertyId);
-    if (!property || property.orgId !== orgId) throw new Error('NOT_FOUND');
-    if (args.purchasePriceKobo <= 0) throw new Error('INVALID_PRICE');
-    if (!isValidEmail(args.buyerEmail)) throw new Error('INVALID_EMAIL');
-    if (!isValidNigerianPhone(args.buyerPhone)) throw new Error('INVALID_PHONE');
-
-    const now = Date.now();
-    const dealId = await ctx.db.insert('deals', {
-      orgId,
-      propertyId: args.propertyId,
-      buyerName: args.buyerName.trim(),
-      buyerEmail: args.buyerEmail.toLowerCase().trim(),
-      buyerPhone: args.buyerPhone.trim(),
-      assignedAgentIds: args.assignedAgentIds,
-      documentationOfficerId: args.documentationOfficerId,
-      state: InitialDealState,
-      statusLabel: STATUS_LABEL[InitialDealState]!,
-      requiresWetInkDeed: args.requiresWetInkDeed ?? true,
-      purchasePriceKobo: args.purchasePriceKobo,
-      paidAmountKobo: 0,
-      createdBy: user._id,
-      createdAt: now,
-      updatedAt: now,
-    });
-
-    await recordEvent(ctx, {
-      orgId,
-      actorUserId: user._id,
-      actorRole: role,
-      action: 'deal.create',
-      targetType: 'deal',
-      targetId: dealId,
-      metadata: { buyerEmail: args.buyerEmail, purchasePriceKobo: args.purchasePriceKobo },
-    });
-
-    return dealId;
-  },
-});
-
-export const confirmPayment = authedMutation({
-  args: {
-    dealId: v.id('deals'),
-    paidAmountKobo: v.number(),
-    paymentMethod: v.string(),
-    paymentReference: v.string(),
-  },
-  handler: async (ctx, args) => {
-    const { orgId, role, user } = ctx;
-    if (role !== 'principal' && role !== 'admin' && role !== 'manager' && role !== 'documentation_officer') {
-      throw new Error('FORBIDDEN');
-    }
-
-    const deal = await readDeal(ctx, {
-      dealId: args.dealId,
-      orgId,
-      userId: user._id,
-      role,
-    });
-
-    if (deal.state !== 'AWAITING_PAYMENT_CONFIRMATION') {
-      throw new Error('INVALID_STATE_FOR_PAYMENT');
-    }
-
-    assertValidTransition(deal.state, 'RECEIPT_SENT');
-
-    const now = Date.now();
-    await ctx.db.patch(args.dealId, {
-      state: 'RECEIPT_SENT',
-      statusLabel: STATUS_LABEL['RECEIPT_SENT']!,
-      paidAmountKobo: args.paidAmountKobo,
-      paymentMethod: args.paymentMethod,
-      paymentReference: args.paymentReference,
-      paymentConfirmedAt: now,
-      paymentConfirmedBy: user._id,
-      updatedAt: now,
-    });
-
-    await recordEvent(ctx, {
-      orgId,
-      actorUserId: user._id,
-      actorRole: role,
-      action: 'deal.transition',
-      targetType: 'deal',
-      targetId: args.dealId,
-      metadata: {
-        from: 'AWAITING_PAYMENT_CONFIRMATION',
-        to: 'RECEIPT_SENT',
-        paymentReference: args.paymentReference,
-      },
-    });
-
-    await ctx.scheduler.runAfter(0, internal.documents.generate.generateReceipt, {
-      dealId: args.dealId,
-    });
-
-    return { state: 'RECEIPT_SENT' };
-  },
-});
-
-export const transition = authedMutation({
-  args: {
-    dealId: v.id('deals'),
-    nextState: v.string(),
-    overrideReason: v.optional(v.string()),
-  },
-  handler: async (ctx, args) => {
-    const { orgId, role, user } = ctx;
-    assertCan(role, 'deal', 'W');
-
-    const deal = await readDeal(ctx, {
-      dealId: args.dealId,
-      orgId,
-      userId: user._id,
-      role,
-    });
-
-    const isOverride = !!args.overrideReason;
-    if (!isOverride) {
-      assertValidTransition(deal.state, args.nextState);
-    } else if (role !== 'principal' && role !== 'admin' && role !== 'manager') {
-      throw new Error('OVERRIDE_FORBIDDEN');
-    }
-
-    const now = Date.now();
-    await ctx.db.patch(args.dealId, {
-      state: args.nextState,
-      statusLabel: STATUS_LABEL[args.nextState] ?? args.nextState,
-      updatedAt: now,
-      ...(args.nextState === 'COMPLETED' ? { completedAt: now } : {}),
-      ...(args.nextState === 'ARCHIVED' ? { archivedAt: now } : {}),
-    });
-
-    await recordEvent(ctx, {
-      orgId,
-      actorUserId: user._id,
-      actorRole: role,
-      action: isOverride ? 'deal.override' : 'deal.transition',
-      targetType: 'deal',
-      targetId: args.dealId,
-      metadata: {
-        from: deal.state,
-        to: args.nextState,
-        ...(args.overrideReason ? { reason: args.overrideReason } : {}),
-      },
-    });
-
-    return { state: args.nextState };
-  },
-});
-
 /**
  * Onboard a brand-new customer in one shot.
  *
  * Called from the agent's "Onboard customer" flow after they've re-typed
- * their password (verified client-side via Convex Auth's signIn). This action
- * atomically:
- *   1. Creates the property (if it doesn't exist)
- *   2. Creates the deal in state AWAITING_PAYMENT_CONFIRMATION
- *   3. Creates the buyer as a Participant
- *   4. Mints a single-use invitation token + 6-digit PIN
- *   5. Schedules WhatsApp + email dispatch of the magic link
- *   6. Records an audit event
- *
- * Returns the deal id and the raw token+PIN (one-shot — they're never sent
- * over the wire again after this call). The agent sees them so they can
- * copy-paste into WhatsApp manually if the automated delivery hasn't yet
- * been configured.
+ * their password. Atomically creates property + deal + participant + invite,
+ * then schedules WhatsApp/email dispatch of the magic link.
  */
 export const onboardCustomer = authedAction({
   args: {
@@ -306,7 +106,6 @@ export const onboardCustomer = authedAction({
     expiresAt: number;
     customerName: string;
   }> => {
-    // Basic shape checks (re-checked in the committing mutation)
     if (!isValidEmail(args.customerEmail)) throw new Error('INVALID_EMAIL');
     if (!isValidNigerianPhone(args.customerPhone) && !args.customerPhone.startsWith('+1')) {
       throw new Error('INVALID_PHONE');
@@ -333,25 +132,14 @@ export const onboardCustomer = authedAction({
       expiresAt,
     });
 
-    // Fan out the magic-link notifications (WhatsApp + email + in-app).
-    // No PIN — one-tap from WhatsApp/email gets the customer in.
     await ctx.scheduler.runAfter(0, internal.notifications.dispatch.dispatch, {
       orgId: ctx.orgId,
       dealId: result.dealId,
       template: 'invite.client.magic_link',
-      payload: {
-        token,
-        expiresAt,
-        customerName: args.customerName,
-      },
+      payload: { token, expiresAt, customerName: args.customerName },
     });
 
-    return {
-      dealId: result.dealId,
-      token,
-      expiresAt,
-      customerName: args.customerName,
-    };
+    return { dealId: result.dealId, token, expiresAt, customerName: args.customerName };
   },
 });
 
@@ -383,7 +171,6 @@ export const _commitOnboarding = internalMutation({
   handler: async (ctx, args) => {
     const now = Date.now();
 
-    // 1. Create the property (every onboarding gets its own property row for now)
     const propertyId = await ctx.db.insert('properties', {
       orgId: args.orgId,
       name: args.propertyName.trim(),
@@ -395,7 +182,6 @@ export const _commitOnboarding = internalMutation({
       createdAt: now,
     });
 
-    // 2. Create the deal
     const dealId = await ctx.db.insert('deals', {
       orgId: args.orgId,
       propertyId,
@@ -413,7 +199,6 @@ export const _commitOnboarding = internalMutation({
       updatedAt: now,
     });
 
-    // 3. Create the buyer as a participant (for invitation linkage)
     const participantId = await ctx.db.insert('participants', {
       orgId: args.orgId,
       dealId,
@@ -424,7 +209,6 @@ export const _commitOnboarding = internalMutation({
       createdAt: now,
     });
 
-    // 4. Mint the invitation (token-only; no PIN required for one-tap entry)
     const inviteId = await ctx.db.insert('invitations', {
       orgId: args.orgId,
       dealId,
@@ -440,7 +224,6 @@ export const _commitOnboarding = internalMutation({
       createdAt: now,
     });
 
-    // 5. Audit
     await recordEvent(ctx, {
       orgId: args.orgId,
       actorUserId: args.assignedAgentId,

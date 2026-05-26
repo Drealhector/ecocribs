@@ -1,6 +1,6 @@
 'use client';
 
-import { FileText, Download, ExternalLink } from 'lucide-react';
+import { FileText, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/design/Button';
 import { StatusPill } from '@/components/design/StatusPill';
 import { Card, CardContent } from '@/components/design/Card';
@@ -31,13 +31,7 @@ const STATUS_LABEL: Record<string, string> = {
   archived: 'Archived',
 };
 
-export function DocumentViewer({ doc, onSign }: {
-  doc: Doc;
-  onSign?: () => void;
-}) {
-  const downloadable = doc.status === 'fully_signed' || doc.status === 'executed';
-  const downloadHref = `/api/documents/${doc._id}/download`;
-
+export function DocumentViewer({ doc }: { doc: Doc }) {
   return (
     <Card className="overflow-hidden">
       <div className="bg-canvas-warm border-b border-border-subtle p-4 flex items-center gap-4">
@@ -46,34 +40,19 @@ export function DocumentViewer({ doc, onSign }: {
         </div>
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-3">
-            <h3 className="font-heading text-lg font-medium text-ink truncate">
-              {KIND_LABEL[doc.kind]}
-            </h3>
+            <h3 className="font-heading text-lg font-medium text-ink truncate">{KIND_LABEL[doc.kind]}</h3>
             <StatusPill label={STATUS_LABEL[doc.status] ?? doc.status} />
           </div>
           <p className="text-xs text-ink-soft mt-0.5 mono tabular">
             #{shortId(doc._id)} · Updated {formatDateShort(doc.updatedAt)}
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          {downloadable && (
-            <Button asChild variant="ghost" size="icon" aria-label="Download signed PDF">
-              <a href={downloadHref} download>
-                <Download className="h-4 w-4" />
-              </a>
-            </Button>
-          )}
-          <Button variant="outline" size="sm">
-            <ExternalLink className="h-4 w-4" />
-            View
-          </Button>
-        </div>
+        <Button variant="outline" size="sm">
+          <ExternalLink className="h-4 w-4" /> View
+        </Button>
       </div>
 
       <CardContent className="pt-6">
-        {/* PDF preview — when fileUrl is present, render the PDF via iframe
-            against a short-lived signed URL. Until templates + R2 land,
-            we show a friendly placeholder. */}
         {doc.fileUrl ? (
           <iframe
             src={doc.fileUrl}
@@ -83,14 +62,6 @@ export function DocumentViewer({ doc, onSign }: {
         ) : (
           <div className="aspect-[8.5/11] w-full rounded-md bg-canvas-warm border border-border grid place-items-center text-ink-soft text-sm text-center px-4">
             Document preview will appear here
-          </div>
-        )}
-
-        {onSign && doc.status !== 'fully_signed' && doc.status !== 'executed' && (
-          <div className="mt-4">
-            <Button onClick={onSign} size="lg" className="w-full md:w-auto">
-              Sign this document
-            </Button>
           </div>
         )}
       </CardContent>

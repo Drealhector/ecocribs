@@ -1,22 +1,14 @@
 import { v } from 'convex/values';
-import { internalMutation, mutation, query } from './_generated/server';
+import { mutation } from './_generated/server';
 import { authedQuery } from './lib/withAuth';
-import { internal } from './_generated/api';
 import { recordEvent } from './lib/audit';
 import type { Id } from './_generated/dataModel';
 
 /**
  * Public agent signup — anyone can register, no invite required. The
- * caller's Convex Auth user must already exist (created by their
- * preceding password signUp call). This action:
- *
- *   1. Confirms the user has no membership yet in any org
- *   2. Picks the EcoCribs Realty org (currently the only org)
- *   3. Auto-assigns the least-loaded staff (manager / doc officer) as
- *      this agent's supervisor
- *   4. Creates an active membership with role='agent'
- *
- * Returns the orgId so the client can redirect into /agent.
+ * caller's Convex Auth user must already exist. Auto-assigns the
+ * least-loaded staff (manager / doc officer / admin / principal) as
+ * this agent's supervisor.
  */
 export const completePublicSignup = mutation({
   args: { userId: v.id('users'), fullName: v.optional(v.string()) },
@@ -25,16 +17,14 @@ export const completePublicSignup = mutation({
     if (!user) throw new Error('USER_NOT_FOUND');
 
     const org = await ctx.db.query('orgs').first();
-    if (!org) throw new Error('NO_ORG_YET'); // boss must register first
+    if (!org) throw new Error('NO_ORG_YET');
 
-    // Don't double-add
     const existing = await ctx.db
       .query('memberships')
       .withIndex('by_user_org', (q) => q.eq('userId', args.userId).eq('orgId', org._id))
       .unique();
     if (existing) return { orgId: org._id, role: existing.role };
 
-    // Pick least-loaded staff (manager OR documentation_officer)
     const staffMemberships = await ctx.db
       .query('memberships')
       .withIndex('by_org_role', (q) => q.eq('orgId', org._id).eq('role', 'manager'))
@@ -61,7 +51,6 @@ export const completePublicSignup = mutation({
 
     let assignedStaffUserId: Id<'users'> | undefined;
     if (candidates.length > 0) {
-      // Count active agents per staff
       const allAgents = await ctx.db
         .query('memberships')
         .withIndex('by_org_role', (q) => q.eq('orgId', org._id).eq('role', 'agent'))
@@ -101,7 +90,7 @@ export const completePublicSignup = mutation({
       orgId: org._id,
       actorUserId: args.userId,
       actorRole: 'agent',
-      action: 'invite.accept', // re-uses existing audit action; means "joined"
+      action: 'invite.accept',
       targetType: 'membership',
       targetId: membershipId,
       metadata: { mode: 'public_agent_signup', assignedStaffUserId },
@@ -113,7 +102,6 @@ export const completePublicSignup = mutation({
 
 /**
  * Agent dashboard — lists customers (deals) the agent brought in.
- * Filtered to deals where the agent is in assignedAgentIds.
  */
 export const listMyCustomers = authedQuery({
   args: {},
@@ -124,43 +112,5 @@ export const listMyCustomers = authedQuery({
       .order('desc')
       .collect();
     return deals.filter((d) => d.assignedAgentIds.includes(ctx.user._id));
-  },
-});
-
-/**
- * Staff dashboard — list the agents this staff supervises plus a brief
- * summary of each agent's pipeline (count of active deals).
- */
-export const listMyAgents = authedQuery({
-  args: {},
-  handler: async (ctx) => {
-    if (
-      ctx.role !== 'manager' &&
-      ctx.role !== 'documentation_officer' &&
-      ctx.role !== 'admin' &&
-      ctx.role !== 'principal'
-    ) {
-      return [];
-    }
-    let agentMemberships = await ctx.db
-      .query('memberships')
-      .withIndex('by_org_role', (q) => q.eq('orgId', ctx.orgId).eq('role', 'agent'))
-      .collect();
-    // Principal/Admin see ALL agents; staff sees only their assigned roster
-    if (ctx.role !== 'admin' && ctx.role !== 'principal') {
-      agentMemberships = agentMemberships.filter((m) => m.assignedStaffUserId === ctx.user._id);
-    }
-    const result = [];
-    for (const m of agentMemberships) {
-      const u = await ctx.db.get(m.userId);
-      if (!u) continue;
-      result.push({
-        userId: u._id,
-        email: u.email,
-        fullName: u.fullName ?? u.name ?? u.email,
-        joinedAt: m.createdAt,
-      });
-    }
-    return result;
   },
 });

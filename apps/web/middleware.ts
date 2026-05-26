@@ -3,16 +3,7 @@ import {
   createRouteMatcher,
   nextjsMiddlewareRedirect,
 } from '@convex-dev/auth/nextjs/server';
-
-/**
- * Demo mode — hardcoded to match lib/preview.ts. Skips ALL auth checks
- * so the user can browse every section (admin, agent, customer, witness,
- * sign pages) freely without logging in.
- *
- * Flip to `false` to re-enable real Convex Auth gating on /admin and the
- * /sign-in redirect-when-already-authed behaviour.
- */
-const IS_PREVIEW = true;
+import { IS_PREVIEW } from '@/lib/preview';
 
 const isProtected = createRouteMatcher(['/admin(.*)', '/agent(.*)', '/principal(.*)']);
 const isSignIn = createRouteMatcher(['/sign-in']);

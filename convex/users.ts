@@ -1,6 +1,4 @@
-import { v } from 'convex/values';
 import { authedQuery } from './lib/withAuth';
-import { internalQuery } from './_generated/server';
 import { assertCan } from './lib/authz';
 
 /**
@@ -49,12 +47,3 @@ export const listStaff = authedQuery({
   },
 });
 
-export const _resolveUsers = internalQuery({
-  args: { ids: v.array(v.id('users')) },
-  handler: async (ctx, args) => {
-    const rows = await Promise.all(args.ids.map((id) => ctx.db.get(id)));
-    return rows.map((u) =>
-      u ? { _id: u._id, fullName: u.fullName ?? u.name ?? u.email ?? 'Unknown', email: u.email } : null,
-    );
-  },
-});
