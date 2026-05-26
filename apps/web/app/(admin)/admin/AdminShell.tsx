@@ -3,10 +3,9 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, FileText, Users, FilePlus, ScrollText, Wallet, Menu, X, ArrowLeft } from 'lucide-react';
+import { LayoutDashboard, FileText, Users, FilePlus, ScrollText, Wallet, Menu, X } from 'lucide-react';
 import { Nav } from '@/components/design/Nav';
 import { cn } from '@/lib/utils';
-import { IS_PREVIEW } from '@/lib/preview';
 
 const NAV_ITEMS = [
   { href: '/admin', icon: LayoutDashboard, label: 'Overview', match: (p: string) => p === '/admin' },
@@ -59,25 +58,9 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
 
   const activeLabel = NAV_ITEMS.find((i) => i.match(pathname))?.label ?? 'Overview';
 
-  // In preview mode there's no real session, so the demo user can always be
-  // treated as Principal viewing the admin shell. Outside preview, this
-  // should be replaced with a `useQuery(api.users.me)` role check.
-  const isPrincipal = IS_PREVIEW;
-
   return (
     <div className="min-h-dvh flex flex-col">
       <Nav />
-
-      {isPrincipal && (
-        <div className="bg-brand-gold-soft border-b border-brand-gold/20">
-          <div className="container py-2 flex items-center justify-between gap-3 text-xs">
-            <span className="text-ink-soft">Viewing the admin dashboard as <span className="font-medium text-ink">Principal</span>.</span>
-            <Link href="/principal" className="inline-flex items-center gap-1 text-brand-green hover:underline font-medium">
-              <ArrowLeft className="h-3 w-3" /> Back to Principal
-            </Link>
-          </div>
-        </div>
-      )}
 
       {/* Mobile sub-nav bar with hamburger to open drawer */}
       <div className="md:hidden sticky top-16 z-20 border-b border-border bg-canvas/95 backdrop-blur">

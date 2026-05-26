@@ -35,8 +35,7 @@ export type AuditAction =
   | 'kyc.submit'
   | 'kyc.verify'
   | 'admin.invited'
-  | 'admin.removed'
-  | 'admin.role_changed';
+  | 'admin.removed';
 
 async function sha256Hex(s: string): Promise<string> {
   const buf = new TextEncoder().encode(s);
