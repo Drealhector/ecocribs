@@ -1,15 +1,19 @@
 /**
- * Seed the first EcoCribs Realty org + admin membership.
+ * Seed the first EcoCribs Realty org + Principal membership.
  *
- * Convex Auth creates the actual `users` row when an admin signs up via the
+ * Convex Auth creates the actual `users` row when the founder signs up via the
  * Password provider. This mutation is run *after* that signup to attach a
- * profile + an `admin` membership to a freshly-created org. It is a no-op if
- * any org already exists, so it is safe to run repeatedly.
+ * profile + a `principal` membership to a freshly-created org. It is a no-op
+ * if any org already exists, so it is safe to run repeatedly.
+ *
+ * The first human is always the Principal — the top of the hierarchy
+ * (Principal → Admin → Staff → Agent → Customer). Only the Principal can
+ * invite or remove admins; everything else admin can do, Principal can do too.
  *
  * Usage from the Convex dashboard (or a one-shot CLI):
  *   npx convex run seed:seedFirstAdmin '{
  *     "userId": "<users _id from Convex Auth>",
- *     "email":  "admin@ecocribs.com",
+ *     "email":  "principal@ecocribs.com",
  *     "fullName": "Hector Sam"
  *   }'
  */
@@ -56,11 +60,11 @@ export const seedFirstAdmin = internalMutation({
       createdAt: now,
     });
 
-    // Attach the admin membership.
+    // Attach the Principal membership (top of hierarchy).
     const membershipId = await ctx.db.insert('memberships', {
       userId: args.userId,
       orgId,
-      role: 'admin',
+      role: 'principal',
       status: 'active',
       teamIds: [],
       createdAt: now,

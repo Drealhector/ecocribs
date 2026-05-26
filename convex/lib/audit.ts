@@ -33,7 +33,10 @@ export type AuditAction =
   | 'perm.revoke'
   | 'data.export'
   | 'kyc.submit'
-  | 'kyc.verify';
+  | 'kyc.verify'
+  | 'admin.invited'
+  | 'admin.removed'
+  | 'admin.role_changed';
 
 async function sha256Hex(s: string): Promise<string> {
   const buf = new TextEncoder().encode(s);

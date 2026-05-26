@@ -10,28 +10,28 @@ import type { Role } from './withAuth';
  */
 const MATRIX = {
   org: {
-    admin: 'RWDA', manager: 'R', documentation_officer: 'R', agent: 'R',
+    principal: 'RWDA', admin: 'RWDA', manager: 'R', documentation_officer: 'R', agent: 'R',
   },
   team: {
-    admin: 'RWDA', manager: 'RWDA', documentation_officer: 'R', agent: 'R*',
+    principal: 'RWDA', admin: 'RWDA', manager: 'RWDA', documentation_officer: 'R', agent: 'R*',
   },
   deal: {
-    admin: 'RWDA', manager: 'RWDA', documentation_officer: 'RWD', agent: 'RW*',
+    principal: 'RWDA', admin: 'RWDA', manager: 'RWDA', documentation_officer: 'RWD', agent: 'RW*',
   },
   document: {
-    admin: 'RWDA', manager: 'RWD', documentation_officer: 'RWD', agent: 'RW*',
+    principal: 'RWDA', admin: 'RWDA', manager: 'RWD', documentation_officer: 'RWD', agent: 'RW*',
   },
   template: {
-    admin: 'RWDA', manager: 'RWDA', documentation_officer: 'RWD', agent: 'R',
+    principal: 'RWDA', admin: 'RWDA', manager: 'RWDA', documentation_officer: 'RWD', agent: 'R',
   },
   signature: {
-    admin: 'RWDA', manager: 'RW', documentation_officer: 'RW', agent: 'RW*',
+    principal: 'RWDA', admin: 'RWDA', manager: 'RW', documentation_officer: 'RW', agent: 'RW*',
   },
   audit: {
-    admin: 'R', manager: 'R', documentation_officer: 'R*', agent: '-',
+    principal: 'R', admin: 'R', manager: 'R', documentation_officer: 'R*', agent: '-',
   },
   member: {
-    admin: 'RWDA', manager: 'R', documentation_officer: 'R', agent: 'R*',
+    principal: 'RWDA', admin: 'RWDA', manager: 'R', documentation_officer: 'R', agent: 'R*',
   },
 } as const;
 
@@ -60,7 +60,7 @@ export async function readDeal(
   const deal = (await ctx.db.get(dealId)) as Doc<'deals'> | null;
   if (!deal) throw new Error('NOT_FOUND');
   if (deal.orgId !== orgId) throw new Error('NOT_FOUND');
-  if (deal.state === 'ARCHIVED' && role !== 'admin') throw new Error('NOT_FOUND');
+  if (deal.state === 'ARCHIVED' && role !== 'admin' && role !== 'principal') throw new Error('NOT_FOUND');
   if (role === 'agent' && !deal.assignedAgentIds.includes(userId)) {
     throw new Error('NOT_FOUND');
   }

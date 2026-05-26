@@ -161,7 +161,7 @@ export const confirmPayment = authedMutation({
   },
   handler: async (ctx, args) => {
     const { orgId, role, user } = ctx;
-    if (role !== 'admin' && role !== 'manager' && role !== 'documentation_officer') {
+    if (role !== 'principal' && role !== 'admin' && role !== 'manager' && role !== 'documentation_officer') {
       throw new Error('FORBIDDEN');
     }
 
@@ -232,7 +232,7 @@ export const transition = authedMutation({
     const isOverride = !!args.overrideReason;
     if (!isOverride) {
       assertValidTransition(deal.state, args.nextState);
-    } else if (role !== 'admin' && role !== 'manager') {
+    } else if (role !== 'principal' && role !== 'admin' && role !== 'manager') {
       throw new Error('OVERRIDE_FORBIDDEN');
     }
 

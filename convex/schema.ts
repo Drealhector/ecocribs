@@ -75,6 +75,7 @@ export default defineSchema({
     userId: v.id('users'),
     orgId: v.id('orgs'),
     role: v.union(
+      v.literal('principal'),
       v.literal('admin'),
       v.literal('manager'),
       v.literal('documentation_officer'),

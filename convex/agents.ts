@@ -47,9 +47,17 @@ export const completePublicSignup = mutation({
       .query('memberships')
       .withIndex('by_org_role', (q) => q.eq('orgId', org._id).eq('role', 'admin'))
       .collect();
+    const principalMemberships = await ctx.db
+      .query('memberships')
+      .withIndex('by_org_role', (q) => q.eq('orgId', org._id).eq('role', 'principal'))
+      .collect();
 
-    const candidates = [...staffMemberships, ...docOfficerMemberships, ...adminMemberships]
-      .filter((m) => m.status === 'active');
+    const candidates = [
+      ...staffMemberships,
+      ...docOfficerMemberships,
+      ...adminMemberships,
+      ...principalMemberships,
+    ].filter((m) => m.status === 'active');
 
     let assignedStaffUserId: Id<'users'> | undefined;
     if (candidates.length > 0) {
@@ -126,15 +134,20 @@ export const listMyCustomers = authedQuery({
 export const listMyAgents = authedQuery({
   args: {},
   handler: async (ctx) => {
-    if (ctx.role !== 'manager' && ctx.role !== 'documentation_officer' && ctx.role !== 'admin') {
+    if (
+      ctx.role !== 'manager' &&
+      ctx.role !== 'documentation_officer' &&
+      ctx.role !== 'admin' &&
+      ctx.role !== 'principal'
+    ) {
       return [];
     }
     let agentMemberships = await ctx.db
       .query('memberships')
       .withIndex('by_org_role', (q) => q.eq('orgId', ctx.orgId).eq('role', 'agent'))
       .collect();
-    // Admin sees ALL agents; staff sees only their assigned roster
-    if (ctx.role !== 'admin') {
+    // Principal/Admin see ALL agents; staff sees only their assigned roster
+    if (ctx.role !== 'admin' && ctx.role !== 'principal') {
       agentMemberships = agentMemberships.filter((m) => m.assignedStaffUserId === ctx.user._id);
     }
     const result = [];

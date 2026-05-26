@@ -14,14 +14,14 @@ import {
  */
 const IS_PREVIEW = true;
 
-const isAdmin = createRouteMatcher(['/admin(.*)', '/agent(.*)']);
+const isProtected = createRouteMatcher(['/admin(.*)', '/agent(.*)', '/principal(.*)']);
 const isSignIn = createRouteMatcher(['/sign-in']);
 
 export default convexAuthNextjsMiddleware(async (request, { convexAuth }) => {
   if (IS_PREVIEW) return; // demo: no auth, no redirects
 
   const authed = await convexAuth.isAuthenticated();
-  if (isAdmin(request) && !authed) {
+  if (isProtected(request) && !authed) {
     return nextjsMiddlewareRedirect(request, '/sign-in');
   }
   if (isSignIn(request) && authed) {

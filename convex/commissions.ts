@@ -26,7 +26,7 @@ export const setForDeal = authedMutation({
     percentBps: v.number(),
   },
   handler: async (ctx, args) => {
-    if (ctx.role !== 'admin' && ctx.role !== 'manager') throw new Error('FORBIDDEN');
+    if (ctx.role !== 'principal' && ctx.role !== 'admin' && ctx.role !== 'manager') throw new Error('FORBIDDEN');
     if (args.percentBps < 0 || args.percentBps > 5000) {
       throw new Error('INVALID_PERCENT'); // cap at 50%
     }
@@ -92,11 +92,11 @@ export const markCleared = authedMutation({
   handler: async (ctx, args) => {
     const row = await ctx.db.get(args.commissionId);
     if (!row || row.orgId !== ctx.orgId) throw new Error('NOT_FOUND');
-    if (ctx.role !== 'admin' && ctx.role !== 'manager' && ctx.role !== 'documentation_officer') {
+    if (ctx.role !== 'principal' && ctx.role !== 'admin' && ctx.role !== 'manager' && ctx.role !== 'documentation_officer') {
       throw new Error('FORBIDDEN');
     }
     // Staff (non-admin) can only clear their own assigned agents' rows
-    if (ctx.role !== 'admin' && row.staffUserId !== ctx.user._id) {
+    if (ctx.role !== 'principal' && ctx.role !== 'admin' && row.staffUserId !== ctx.user._id) {
       throw new Error('FORBIDDEN_NOT_YOUR_AGENT');
     }
     await ctx.db.patch(args.commissionId, {
@@ -124,7 +124,7 @@ export const markCleared = authedMutation({
 export const forwardToStaff = authedMutation({
   args: { commissionId: v.id('commissions'), staffUserId: v.id('users') },
   handler: async (ctx, args) => {
-    if (ctx.role !== 'admin') throw new Error('FORBIDDEN');
+    if (ctx.role !== 'principal' && ctx.role !== 'admin') throw new Error('FORBIDDEN');
     const row = await ctx.db.get(args.commissionId);
     if (!row || row.orgId !== ctx.orgId) throw new Error('NOT_FOUND');
     await ctx.db.patch(args.commissionId, {
@@ -192,7 +192,7 @@ export const listForStaff = authedQuery({
 export const listAll = authedQuery({
   args: { status: v.optional(v.union(v.literal('pending'), v.literal('cleared'), v.literal('cancelled'))) },
   handler: async (ctx, args) => {
-    if (ctx.role !== 'admin') return [];
+    if (ctx.role !== 'principal' && ctx.role !== 'admin') return [];
     let q = ctx.db.query('commissions').withIndex('by_org_status', (b) => b.eq('orgId', ctx.orgId));
     if (args.status) q = q.filter((f) => f.eq(f.field('status'), args.status));
     const rows = await q.order('desc').collect();

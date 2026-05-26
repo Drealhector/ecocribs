@@ -5,7 +5,7 @@ import { internal } from '../_generated/api';
 import { getAuthUserId } from '@convex-dev/auth/server';
 import type { Doc, Id } from '../_generated/dataModel';
 
-export type Role = 'admin' | 'manager' | 'documentation_officer' | 'agent';
+export type Role = 'principal' | 'admin' | 'manager' | 'documentation_officer' | 'agent';
 
 /**
  * Single chokepoint for tenant + identity + role resolution.
@@ -34,10 +34,11 @@ async function loadUserContext(ctx: any, userId: Id<'users'>) {
     .first()) as Doc<'memberships'> | null;
 
   // First-user bootstrap: if there's no membership AND no org exists yet, the
-  // signing-in user becomes the admin/owner of a new EcoCribs Realty org.
-  // Only fires from mutations (queries are read-only) — actions go through
-  // the runQuery path which uses the internal `_resolveUserContext` query
-  // that returns null instead of bootstrapping.
+  // signing-in user becomes the Principal (owner) of a new EcoCribs Realty
+  // org. Principal sits above admin and is the only role that can invite or
+  // remove admins. Only fires from mutations (queries are read-only) — actions
+  // go through the runQuery path which uses the internal `_resolveUserContext`
+  // query that returns null instead of bootstrapping.
   if (!membership && typeof ctx.db.insert === 'function') {
     const anyOrg = await ctx.db.query('orgs').first();
     if (!anyOrg) {
@@ -50,7 +51,7 @@ async function loadUserContext(ctx: any, userId: Id<'users'>) {
       const memId = await ctx.db.insert('memberships', {
         userId,
         orgId,
-        role: 'admin' as Role,
+        role: 'principal' as Role,
         status: 'active' as const,
         teamIds: [],
         createdAt: Date.now(),

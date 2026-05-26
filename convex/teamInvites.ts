@@ -33,8 +33,13 @@ export const create = authedAction({
     email: string;
     role: Role;
   }> => {
-    if (ctx.role !== 'admin' && ctx.role !== 'manager') {
+    if (ctx.role !== 'principal' && ctx.role !== 'admin' && ctx.role !== 'manager') {
       throw new Error('FORBIDDEN');
+    }
+    // Only Principal can invite/onboard fellow admins via the generic team
+    // invite path; admins.ts.inviteAdmin is the dedicated Principal-only flow.
+    if (args.role === 'admin' && ctx.role !== 'principal') {
+      throw new Error('FORBIDDEN_ONLY_PRINCIPAL_CAN_INVITE_ADMIN');
     }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(args.email)) {
       throw new Error('INVALID_EMAIL');
