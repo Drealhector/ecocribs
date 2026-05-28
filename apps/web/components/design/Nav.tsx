@@ -30,14 +30,9 @@ export function Nav() {
           <Logo compact />
         </Link>
 
-        {/* Desktop nav */}
+        {/* Desktop nav — admin reaches their dashboard via the role tabs on
+            the Staff sign-in page, so no separate Admin link here. */}
         <nav className="hidden md:flex items-center gap-2">
-          <Link
-            href="/admin"
-            className="text-sm font-medium text-ink-muted hover:text-ink transition-colors px-3 py-2"
-          >
-            Admin
-          </Link>
           <Button asChild variant="ghost" size="sm">
             <Link href="/sign-in">Staff sign in</Link>
           </Button>
@@ -65,13 +60,6 @@ export function Nav() {
           style={{ height: 'calc(100dvh - 4rem)' }}
         >
           <div className="container py-6 flex flex-col gap-1">
-            <Link
-              href="/admin"
-              className="flex items-center justify-between rounded-md px-4 py-4 text-base font-medium text-ink hover:bg-canvas-warm"
-            >
-              Admin dashboard
-              <span aria-hidden className="text-ink-soft">›</span>
-            </Link>
             <Link
               href="/sign-in"
               className="flex items-center justify-between rounded-md px-4 py-4 text-base font-medium text-ink hover:bg-canvas-warm"
